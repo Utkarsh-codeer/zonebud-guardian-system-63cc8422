@@ -1,9 +1,14 @@
-
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/use-toast';
 
@@ -13,23 +18,21 @@ const LoginScreen: React.FC = () => {
   const { login, isAuthenticated, isLoading, error } = useAuth();
   const { toast } = useToast();
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
+  if (isAuthenticated) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login(email, password);
       toast({
-        title: "Success",
-        description: "Logged in successfully!",
+        title: 'Success',
+        description: 'Logged in successfully!',
       });
     } catch (err) {
       toast({
-        title: "Error",
-        description: error || "Login failed",
-        variant: "destructive",
+        title: 'Error',
+        description: error || 'Login failed',
+        variant: 'destructive',
       });
     }
   };
@@ -40,40 +43,45 @@ const LoginScreen: React.FC = () => {
       manager: { email: 'manager@zonebudapp.com', password: 'password123' },
       worker: { email: 'worker@zonebudapp.com', password: 'password123' },
     };
-    
     const cred = credentials[role as keyof typeof credentials];
     setEmail(cred.email);
     setPassword(cred.password);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">ZB</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ECF3FF] to-[#E8F9F1] dark:from-[#1f1f1f] dark:to-[#121212] px-4">
+      <Card className="w-full max-w-md rounded-2xl shadow-xl border-none">
+        <CardHeader className="text-center space-y-2">
+          <div className="w-16 h-16 rounded-xl bg-[#007AFF] flex items-center justify-center mx-auto mb-2 shadow-md">
+            <span className="text-white text-3xl font-extrabold">ZB</span>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome to ZoneBud</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+            Welcome back 👋
+          </CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-300">
+            Please enter your credentials to continue
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
+
+        <CardContent className="space-y-6 pt-4 pb-2">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="text-left space-y-1">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
               </label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="zonebud@example.com"
+                className="rounded-lg px-4 py-2"
                 required
               />
             </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
+
+            <div className="text-left space-y-1">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Password
               </label>
               <Input
@@ -81,62 +89,46 @@ const LoginScreen: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="••••••••"
+                className="rounded-lg px-4 py-2"
                 required
               />
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+              <div className="text-red-600 text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded-md">
                 {error}
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full py-2 text-sm rounded-lg font-medium">
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className="border-t pt-4">
-            <p className="text-sm text-gray-600 mb-3">Demo Accounts:</p>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-                onClick={() => fillDemoCredentials('admin')}
-              >
-                Super Admin Demo
+          <div className="pt-2 border-t text-left space-y-3">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              Use a demo account
+            </p>
+            <div className="grid gap-2">
+              <Button variant="outline" size="sm" onClick={() => fillDemoCredentials('admin')}>
+                Super Admin
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-                onClick={() => fillDemoCredentials('manager')}
-              >
-                Zone Manager Demo
+              <Button variant="outline" size="sm" onClick={() => fillDemoCredentials('manager')}>
+                Zone Manager
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-                onClick={() => fillDemoCredentials('worker')}
-              >
-                Zone Worker Demo
+              <Button variant="outline" size="sm" onClick={() => fillDemoCredentials('worker')}>
+                Zone Worker
               </Button>
             </div>
           </div>
 
-          <div className="text-center space-y-2">
-            <Link to="/signup" className="text-primary hover:underline text-sm">
+          <div className="text-center space-y-2 text-sm pt-2">
+            <Link to="/signup" className="text-[#007AFF] font-medium hover:underline">
               Don't have an account? Sign up
             </Link>
             <br />
-            <Link to="/onboarding" className="text-gray-500 hover:underline text-sm">
+            <Link to="/onboarding" className="text-gray-500 hover:underline">
               Take a tour
             </Link>
           </div>
