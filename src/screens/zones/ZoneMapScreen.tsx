@@ -38,118 +38,83 @@ const ZoneMapScreen: React.FC = () => {
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">Zone Map</h1>
           </div>
-          <Button variant="outline" className="border-[#E87070] text-[#E87070] hover:bg-[#E87070] hover:text-white">
-            🗺️ Full Screen
+          <Button className="bg-[#E87070] hover:bg-[#d86060] text-white">
+            + Add Zone
           </Button>
         </header>
         
         <main className="flex-1 px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Map Area */}
-            <div className="lg:col-span-3">
-              <Card className="bg-white shadow-lg">
-                <CardContent className="p-0">
-                  <div className="h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">🗺️</div>
-                      <h3 className="text-xl font-medium text-gray-900 mb-2">Interactive Map</h3>
-                      <p className="text-gray-600 mb-4">
-                        Zone locations and real-time status
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Map integration would be implemented here
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Zone List Sidebar */}
-            <div className="lg:col-span-1">
-              <Card className="bg-white shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-gray-900 font-bold">Active Zones</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {userZones.map(zone => (
-                      <div key={zone.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900 text-sm">{zone.name}</h4>
-                          <Badge className={`text-xs ${getStatusColor(zone.status)}`}>
-                            {zone.status}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div className="flex justify-between">
-                            <span>Type:</span>
-                            <span>{zone.type}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Present:</span>
-                            <span className="text-green-600 font-medium">
-                              {zone.presenceData.filter(p => p.isActive).length}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Map Controls */}
-              <Card className="bg-white shadow-lg mt-6">
-                <CardHeader>
-                  <CardTitle className="text-gray-900 font-bold">Map Controls</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <Button variant="outline" className="w-full text-sm border-gray-300">
-                      📍 Center Map
-                    </Button>
-                    <Button variant="outline" className="w-full text-sm border-gray-300">
-                      🔍 Zoom In
-                    </Button>
-                    <Button variant="outline" className="w-full text-sm border-gray-300">
-                      🔍 Zoom Out
-                    </Button>
-                    <Button variant="outline" className="w-full text-sm border-gray-300">
-                      🎯 Find My Location
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Map Legend */}
-          <Card className="bg-white shadow-lg mt-6">
+          {/* Map Container */}
+          <Card className="bg-white shadow-lg mb-6">
             <CardHeader>
-              <CardTitle className="text-gray-900 font-bold">Legend</CardTitle>
+              <CardTitle className="text-gray-900 font-bold">Interactive Zone Map</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-500 rounded"></div>
-                  <span className="text-sm text-gray-600">Active Zone</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                  <span className="text-sm text-gray-600">Maintenance</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span className="text-sm text-gray-600">Inactive</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                  <span className="text-sm text-gray-600">User Location</span>
+              <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">🗺️</div>
+                  <p className="text-gray-500 font-medium">Map Integration Coming Soon</p>
+                  <p className="text-sm text-gray-400">Interactive zone mapping will be available here</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Zone List */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900 font-bold">Active Zones</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {userZones.filter(zone => zone.status === 'active').map(zone => (
+                    <div key={zone.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{zone.name}</h4>
+                        <p className="text-sm text-gray-600">Parking Zone</p>
+                      </div>
+                      <Badge className={getStatusColor(zone.status)}>
+                        {zone.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900 font-bold">Zone Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Zones:</span>
+                    <span className="font-bold text-gray-900">{userZones.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Active Zones:</span>
+                    <span className="font-bold text-green-600">
+                      {userZones.filter(z => z.status === 'active').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Maintenance:</span>
+                    <span className="font-bold text-yellow-600">
+                      {userZones.filter(z => z.status === 'maintenance').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Inactive:</span>
+                    <span className="font-bold text-red-600">
+                      {userZones.filter(z => z.status === 'inactive').length}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </SidebarInset>
     </div>

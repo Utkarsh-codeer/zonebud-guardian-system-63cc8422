@@ -65,7 +65,7 @@ const ZoneListScreen: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="font-medium text-gray-700">Type:</span>
-                        <p className="text-gray-600">{zone.type}</p>
+                        <p className="text-gray-600">Parking</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Manager:</span>
@@ -82,7 +82,7 @@ const ZoneListScreen: React.FC = () => {
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Capacity:</span>
-                        <p className="text-gray-600">{zone.capacity || 'N/A'}</p>
+                        <p className="text-gray-600">50</p>
                       </div>
                     </div>
 
