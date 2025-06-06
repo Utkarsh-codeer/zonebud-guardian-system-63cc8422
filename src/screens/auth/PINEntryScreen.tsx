@@ -1,43 +1,37 @@
 
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/use-toast';
 
-const OTPVerificationScreen: React.FC = () => {
-  const [otp, setOtp] = useState('');
-  const { verifyOTP, isAuthenticated, isLoading, error, pendingOTPVerification, pendingPINEntry } = useAuth();
+const PINEntryScreen: React.FC = () => {
+  const [pin, setPin] = useState('');
+  const { verifyPIN, isAuthenticated, isLoading, error, pendingPINEntry } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  if (!pendingOTPVerification && !pendingPINEntry) {
+  if (!pendingPINEntry) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (pendingPINEntry) {
-    return <Navigate to="/enter-pin" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await verifyOTP(otp);
+      await verifyPIN(pin);
       toast({
         title: "Success",
-        description: "Phone number verified successfully!",
+        description: "PIN verified successfully!",
       });
-      navigate('/enter-pin');
     } catch (err) {
       toast({
         title: "Error",
-        description: error || "OTP verification failed",
+        description: error || "PIN verification failed",
         variant: "destructive",
       });
     }
@@ -48,13 +42,13 @@ const OTPVerificationScreen: React.FC = () => {
       <Card className="w-full max-w-md rounded-2xl shadow-xl border-none">
         <CardHeader className="text-center space-y-2">
           <div className="w-16 h-16 rounded-xl bg-[#E74C3C] flex items-center justify-center mx-auto mb-2 shadow-md">
-            <span className="text-white text-3xl font-extrabold">📱</span>
+            <span className="text-white text-3xl font-extrabold">🔒</span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-            Verify Your Phone
+            Enter Security PIN
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
-            We've sent a 6-digit code to your phone number. Enter it below to continue.
+            Please enter your 4-digit security PIN to access the app
           </CardDescription>
         </CardHeader>
         
@@ -62,16 +56,16 @@ const OTPVerificationScreen: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="text-center space-y-2">
               <Input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="Enter 6-digit code"
-                maxLength={6}
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                placeholder="Enter 4-digit PIN"
+                maxLength={4}
                 className="text-center text-2xl tracking-widest rounded-lg px-4 py-3"
                 required
               />
               <p className="text-xs text-gray-500">
-                Demo: Use <strong>123456</strong> as the verification code
+                Demo: Use <strong>1234</strong> as your security PIN
               </p>
             </div>
 
@@ -84,16 +78,10 @@ const OTPVerificationScreen: React.FC = () => {
             <Button
               type="submit"
               className="w-full py-3 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
-              disabled={isLoading || otp.length !== 6}
+              disabled={isLoading || pin.length !== 4}
             >
-              {isLoading ? 'Verifying...' : 'Verify Code'}
+              {isLoading ? 'Verifying...' : 'Enter App'}
             </Button>
-
-            <div className="text-center">
-              <Button variant="ghost" size="sm" className="text-[#E74C3C] hover:text-[#C0392B]">
-                Resend Code
-              </Button>
-            </div>
           </form>
         </CardContent>
       </Card>
@@ -101,4 +89,4 @@ const OTPVerificationScreen: React.FC = () => {
   );
 };
 
-export default OTPVerificationScreen;
+export default PINEntryScreen;

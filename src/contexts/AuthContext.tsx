@@ -20,6 +20,9 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  pendingOTPVerification: boolean;
+  pendingPINEntry: boolean;
+  tempUserData: any;
 }
 
 type AuthAction =
@@ -27,13 +30,19 @@ type AuthAction =
   | { type: 'AUTH_SUCCESS'; payload: User }
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'LOGOUT' }
-  | { type: 'UPDATE_USER'; payload: Partial<User> };
+  | { type: 'UPDATE_USER'; payload: Partial<User> }
+  | { type: 'OTP_PENDING'; payload: any }
+  | { type: 'PIN_PENDING' }
+  | { type: 'RESET_AUTH_STATE' };
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  pendingOTPVerification: false,
+  pendingPINEntry: false,
+  tempUserData: null,
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -47,6 +56,9 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAuthenticated: true,
         isLoading: false,
         error: null,
+        pendingOTPVerification: false,
+        pendingPINEntry: false,
+        tempUserData: null,
       };
     case 'AUTH_ERROR':
       return {
@@ -63,11 +75,36 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAuthenticated: false,
         isLoading: false,
         error: null,
+        pendingOTPVerification: false,
+        pendingPINEntry: false,
+        tempUserData: null,
       };
     case 'UPDATE_USER':
       return {
         ...state,
         user: state.user ? { ...state.user, ...action.payload } : null,
+      };
+    case 'OTP_PENDING':
+      return {
+        ...state,
+        pendingOTPVerification: true,
+        tempUserData: action.payload,
+        isLoading: false,
+      };
+    case 'PIN_PENDING':
+      return {
+        ...state,
+        pendingOTPVerification: false,
+        pendingPINEntry: true,
+        isLoading: false,
+      };
+    case 'RESET_AUTH_STATE':
+      return {
+        ...state,
+        pendingOTPVerification: false,
+        pendingPINEntry: false,
+        tempUserData: null,
+        error: null,
       };
     default:
       return state;
@@ -78,8 +115,10 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   signup: (userData: any) => Promise<void>;
   verifyOTP: (otp: string) => Promise<void>;
+  verifyPIN: (pin: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  resetAuthState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,13 +175,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'AUTH_START' });
     
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const user = demoUsers[email];
       if (user && password === 'password123') {
-        localStorage.setItem('zonebudUser', JSON.stringify(user));
-        dispatch({ type: 'AUTH_SUCCESS', payload: user });
+        dispatch({ type: 'OTP_PENDING', payload: user });
       } else {
         throw new Error('Invalid credentials');
       }
@@ -168,8 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lastSeen: new Date(),
       };
       
-      localStorage.setItem('zonebudUser', JSON.stringify(newUser));
-      dispatch({ type: 'AUTH_SUCCESS', payload: newUser });
+      dispatch({ type: 'OTP_PENDING', payload: newUser });
     } catch (error) {
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Signup failed' });
     }
@@ -182,13 +218,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 500));
       
       if (otp === '123456') {
-        // OTP verified successfully
-        dispatch({ type: 'AUTH_SUCCESS', payload: state.user! });
+        dispatch({ type: 'PIN_PENDING' });
       } else {
         throw new Error('Invalid OTP');
       }
     } catch (error) {
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'OTP verification failed' });
+    }
+  };
+
+  const verifyPIN = async (pin: string) => {
+    dispatch({ type: 'AUTH_START' });
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (pin === '1234') {
+        if (state.tempUserData) {
+          localStorage.setItem('zonebudUser', JSON.stringify(state.tempUserData));
+          dispatch({ type: 'AUTH_SUCCESS', payload: state.tempUserData });
+        }
+      } else {
+        throw new Error('Invalid PIN');
+      }
+    } catch (error) {
+      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'PIN verification failed' });
     }
   };
 
@@ -203,6 +257,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedUser = { ...state.user, ...userData };
       localStorage.setItem('zonebudUser', JSON.stringify(updatedUser));
     }
+  };
+
+  const resetAuthState = () => {
+    dispatch({ type: 'RESET_AUTH_STATE' });
   };
 
   useEffect(() => {
@@ -224,8 +282,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         signup,
         verifyOTP,
+        verifyPIN,
         logout,
         updateUser,
+        resetAuthState,
       }}
     >
       {children}

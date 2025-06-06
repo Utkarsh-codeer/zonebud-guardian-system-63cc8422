@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Navigation from '../../components/layout/Navigation';
+import { SidebarInset, SidebarTrigger } from '../../components/ui/sidebar';
+import AppSidebar from '../../components/layout/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -21,54 +22,54 @@ const Dashboard: React.FC = () => {
     zone.presenceData.some(p => p.userId === user?.id && p.isActive)
   );
 
-  const recentHazards = 2; // Mock data
-  const unreadNotifications = 3; // Mock data
+  const recentHazards = 2;
+  const unreadNotifications = 3;
 
   const getRoleSpecificContent = () => {
     switch (user?.role) {
       case 'super_admin':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Zones</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Total Zones</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{zones.length}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-[#E74C3C]">{zones.length}</div>
+                <p className="text-xs text-gray-500">
                   {activeZones.length} active
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Active Workers</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Active Workers</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-[#E74C3C]">12</div>
+                <p className="text-xs text-gray-500">
                   +2 from yesterday
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Hazard Reports</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Hazard Reports</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{recentHazards}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-[#E74C3C]">{recentHazards}</div>
+                <p className="text-xs text-gray-500">
                   This week
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">System Health</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">System Health</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">99.8%</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-green-600">99.8%</div>
+                <p className="text-xs text-gray-500">
                   Uptime
                 </p>
               </CardContent>
@@ -79,39 +80,39 @@ const Dashboard: React.FC = () => {
       case 'zone_manager':
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">My Zones</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">My Zones</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{userZones.length}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-[#E74C3C]">{userZones.length}</div>
+                <p className="text-xs text-gray-500">
                   {activeZones.length} active
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Workers Present</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Workers Present</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-3xl font-bold text-[#E74C3C]">
                   {activeZones.reduce((acc, zone) => 
                     acc + zone.presenceData.filter(p => p.isActive).length, 0
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500">
                   Currently on-site
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Pending Actions</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Pending Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{recentHazards}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-[#E74C3C]">{recentHazards}</div>
+                <p className="text-xs text-gray-500">
                   Require review
                 </p>
               </CardContent>
@@ -122,30 +123,30 @@ const Dashboard: React.FC = () => {
       default:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">My Status</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">My Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
-                  <Badge variant={currentPresence ? "default" : "secondary"}>
+                  <Badge variant={currentPresence ? "default" : "secondary"} className={currentPresence ? "bg-[#E74C3C]" : ""}>
                     {currentPresence ? "On Site" : "Off Site"}
                   </Badge>
                   {currentPresence && (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-gray-500">
                       {currentPresence.name}
                     </span>
                   )}
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-white shadow-lg">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600">Notifications</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{unreadNotifications}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-3xl font-bold text-[#E74C3C]">{unreadNotifications}</div>
+                <p className="text-xs text-gray-500">
                   Unread messages
                 </p>
               </CardContent>
@@ -156,93 +157,102 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {user?.name}!
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Here's what's happening in your zones today.
-          </p>
-        </div>
+    <div className="flex min-h-screen w-full bg-gray-50">
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-4">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome back, {user?.name}!
+            </h1>
+          </div>
+        </header>
+        
+        <main className="flex-1 p-6">
+          <div className="mb-6">
+            <p className="text-gray-600">
+              Here's what's happening in your zones today.
+            </p>
+          </div>
 
-        {getRoleSpecificContent()}
+          {getRoleSpecificContent()}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Zones</CardTitle>
-              <CardDescription>
-                Zones currently operational
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activeZones.length > 0 ? (
-                <div className="space-y-4">
-                  {activeZones.slice(0, 3).map(zone => (
-                    <div key={zone.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{zone.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {zone.presenceData.filter(p => p.isActive).length} workers present
-                        </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900">Active Zones</CardTitle>
+                <CardDescription>
+                  Zones currently operational
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {activeZones.length > 0 ? (
+                  <div className="space-y-4">
+                    {activeZones.slice(0, 3).map(zone => (
+                      <div key={zone.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{zone.name}</h4>
+                          <p className="text-sm text-gray-500">
+                            {zone.presenceData.filter(p => p.isActive).length} workers present
+                          </p>
+                        </div>
+                        <Link to={`/zones/${zone.id}`}>
+                          <Button variant="outline" size="sm" className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
+                            View
+                          </Button>
+                        </Link>
                       </div>
-                      <Link to={`/zones/${zone.id}`}>
-                        <Button variant="outline" size="sm">View</Button>
+                    ))}
+                    {activeZones.length > 3 && (
+                      <Link to="/zones">
+                        <Button variant="ghost" className="w-full text-[#E74C3C] hover:bg-red-50">
+                          View all zones
+                        </Button>
                       </Link>
-                    </div>
-                  ))}
-                  {activeZones.length > 3 && (
-                    <Link to="/zones">
-                      <Button variant="ghost" className="w-full">
-                        View all zones
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No active zones</p>
-              )}
-            </CardContent>
-          </Card>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No active zones</p>
+                )}
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Common tasks and shortcuts
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link to="/zones/map">
-                <Button variant="outline" className="w-full justify-start">
-                  📍 View Zone Map
-                </Button>
-              </Link>
-              <Link to="/hazards/report">
-                <Button variant="outline" className="w-full justify-start">
-                  ⚠️ Report Hazard
-                </Button>
-              </Link>
-              <Link to="/documents">
-                <Button variant="outline" className="w-full justify-start">
-                  📂 Browse Documents
-                </Button>
-              </Link>
-              {(user?.role === 'zone_manager' || user?.role === 'super_admin') && (
-                <Link to="/reports">
-                  <Button variant="outline" className="w-full justify-start">
-                    📊 Generate Reports
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900">Quick Actions</CardTitle>
+                <CardDescription>
+                  Common tasks and shortcuts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Link to="/zones/map">
+                  <Button variant="outline" className="w-full justify-start border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
+                    📍 View Zone Map
                   </Button>
                 </Link>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+                <Link to="/hazards/report">
+                  <Button variant="outline" className="w-full justify-start border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
+                    ⚠️ Report Hazard
+                  </Button>
+                </Link>
+                <Link to="/documents">
+                  <Button variant="outline" className="w-full justify-start border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
+                    📂 Browse Documents
+                  </Button>
+                </Link>
+                {(user?.role === 'zone_manager' || user?.role === 'super_admin') && (
+                  <Link to="/reports">
+                    <Button variant="outline" className="w-full justify-start border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
+                      📊 Generate Reports
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </SidebarInset>
     </div>
   );
 };
