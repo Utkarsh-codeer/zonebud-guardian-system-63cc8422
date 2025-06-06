@@ -139,87 +139,88 @@ const Dashboard: React.FC = () => {
   );
 
   const getRoleSpecificContent = () => {
-    switch (user?.role) {
-      case 'super_admin':
-        return getSuperAdminContent();
-
-      case 'zone_manager':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-white shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">My Zones</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-[#E87070]">{userZones.length}</div>
-                <p className="text-xs text-gray-500">
-                  {activeZones.length} active
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Workers Present</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-[#E87070]">
-                  {activeZones.reduce((acc, zone) => 
-                    acc + zone.presenceData.filter(p => p.isActive).length, 0
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  Currently on-site
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Pending Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-[#E87070]">{recentHazards}</div>
-                <p className="text-xs text-gray-500">
-                  Require review
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Card className="bg-white shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">My Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={currentPresence ? "default" : "secondary"} className={currentPresence ? "bg-[#E87070]" : ""}>
-                    {currentPresence ? "On Site" : "Off Site"}
-                  </Badge>
-                  {currentPresence && (
-                    <span className="text-sm text-gray-500">
-                      {currentPresence.name}
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Notifications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-[#E87070]">{unreadNotifications}</div>
-                <p className="text-xs text-gray-500">
-                  Unread messages
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+    // Fixed: Check if user role is exactly 'super_admin'
+    if (user?.role === 'super_admin') {
+      return getSuperAdminContent();
     }
+
+    if (user?.role === 'zone_manager') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-white shadow-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">My Zones</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#E87070]">{userZones.length}</div>
+              <p className="text-xs text-gray-500">
+                {activeZones.length} active
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white shadow-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Workers Present</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#E87070]">
+                {activeZones.reduce((acc, zone) => 
+                  acc + zone.presenceData.filter(p => p.isActive).length, 0
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                Currently on-site
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white shadow-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Pending Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#E87070]">{recentHazards}</div>
+              <p className="text-xs text-gray-500">
+                Require review
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // Default for zone_worker
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card className="bg-white shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">My Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              <Badge variant={currentPresence ? "default" : "secondary"} className={currentPresence ? "bg-[#E87070]" : ""}>
+                {currentPresence ? "On Site" : "Off Site"}
+              </Badge>
+              {currentPresence && (
+                <span className="text-sm text-gray-500">
+                  {currentPresence.name}
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Notifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-[#E87070]">{unreadNotifications}</div>
+            <p className="text-xs text-gray-500">
+              Unread messages
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   return (
