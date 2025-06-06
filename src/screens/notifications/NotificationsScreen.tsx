@@ -1,270 +1,285 @@
 
 import React, { useState } from 'react';
-import Navigation from '../../components/layout/Navigation';
+import { SidebarInset, SidebarTrigger } from '../../components/ui/sidebar';
+import AppSidebar from '../../components/layout/AppSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../components/ui/use-toast';
 
 const NotificationsScreen: React.FC = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState([
+  const { toast } = useToast();
+  const [selectedTab, setSelectedTab] = useState('all');
+
+  const mockNotifications = [
     {
       id: '1',
-      type: 'safety',
-      title: 'Safety Alert: Wet Floor Hazard',
-      message: 'A wet floor hazard has been reported in Construction Site Alpha. Please exercise caution when entering the main entrance area.',
-      isRead: false,
+      type: 'hazard',
+      title: 'New Hazard Reported',
+      message: 'Wet floor reported in Zone Alpha - Main Entrance',
       timestamp: new Date('2024-03-01T10:30:00'),
-      sender: 'Safety System',
-      zoneId: 'zone-1',
+      isRead: false,
       priority: 'high',
+      zone: 'Zone Alpha',
     },
     {
       id: '2',
-      type: 'broadcast',
-      title: 'Team Meeting Reminder',
-      message: 'Don\'t forget about the weekly safety meeting tomorrow at 9:00 AM in the main office.',
-      isRead: false,
-      timestamp: new Date('2024-03-01T08:15:00'),
-      sender: 'James Mitchell',
-      zoneId: 'zone-1',
-      priority: 'medium',
+      type: 'presence',
+      title: 'Worker Check-in',
+      message: 'John Smith checked into Zone Beta',
+      timestamp: new Date('2024-03-01T09:15:00'),
+      isRead: true,
+      priority: 'low',
+      zone: 'Zone Beta',
     },
     {
       id: '3',
       type: 'system',
-      title: 'Check-in Reminder',
-      message: 'You have been in zone Construction Site Alpha for 4 hours. Please remember to take your scheduled break.',
-      isRead: true,
-      timestamp: new Date('2024-02-29T14:00:00'),
-      sender: 'ZoneBud System',
-      zoneId: 'zone-1',
-      priority: 'low',
+      title: 'System Maintenance',
+      message: 'Scheduled maintenance completed successfully',
+      timestamp: new Date('2024-02-29T22:00:00'),
+      isRead: false,
+      priority: 'medium',
+      zone: null,
     },
     {
       id: '4',
-      type: 'info',
-      title: 'New Document Available',
-      message: 'Updated Emergency Evacuation Plan has been uploaded to the Safety Documents folder.',
+      type: 'hazard',
+      title: 'Hazard Resolved',
+      message: 'Electrical wiring issue in Zone Gamma has been fixed',
+      timestamp: new Date('2024-02-29T16:45:00'),
       isRead: true,
-      timestamp: new Date('2024-02-28T16:45:00'),
-      sender: 'Document System',
-      zoneId: 'zone-1',
       priority: 'medium',
+      zone: 'Zone Gamma',
     },
     {
       id: '5',
-      type: 'safety',
-      title: 'Scaffolding Inspection Required',
-      message: 'Critical safety issue reported on north side scaffolding. Area has been cordoned off pending inspection.',
-      isRead: true,
-      timestamp: new Date('2024-02-28T14:20:00'),
-      sender: 'Safety System',
-      zoneId: 'zone-1',
-      priority: 'critical',
+      type: 'alert',
+      title: 'Emergency Protocol',
+      message: 'Fire drill scheduled for tomorrow at 2 PM',
+      timestamp: new Date('2024-02-29T14:30:00'),
+      isRead: false,
+      priority: 'high',
+      zone: 'All Zones',
     },
-  ]);
+  ];
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, isRead: true } : notification
-    ));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, isRead: true })));
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
-  };
-
-  const getUnreadCount = (type?: string) => {
-    return notifications.filter(n => !n.isRead && (type ? n.type === type : true)).length;
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-    if (diffDays > 0) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    } else if (diffMinutes > 0) {
-      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-    } else {
-      return 'Just now';
-    }
-  };
-
-  const getTypeIcon = (type: string, priority?: string) => {
-    switch (type) {
-      case 'safety':
-        return '⚠️';
-      case 'broadcast':
-        return '📢';
+  const filteredNotifications = mockNotifications.filter(notification => {
+    switch (selectedTab) {
+      case 'unread':
+        return !notification.isRead;
+      case 'hazards':
+        return notification.type === 'hazard';
       case 'system':
-        return '🔔';
-      case 'info':
-        return 'ℹ️';
+        return notification.type === 'system';
       default:
-        return '📌';
+        return true;
+    }
+  });
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'hazard':
+        return '⚠️';
+      case 'presence':
+        return '👤';
+      case 'system':
+        return '⚙️';
+      case 'alert':
+        return '🚨';
+      default:
+        return '📢';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'low': return 'secondary';
-      case 'medium': return 'outline';
-      case 'high': return 'destructive';
-      case 'critical': return 'destructive';
-      default: return 'outline';
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const filterNotifications = (type: string | null) => {
-    return notifications.filter(n => !type || n.type === type);
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    } else {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    }
   };
 
-  const canBroadcast = ['zone_manager', 'super_admin'].includes(user?.role || '');
+  const markAsRead = (notificationId: string) => {
+    toast({
+      title: "Notification Marked as Read",
+      description: "The notification has been marked as read.",
+    });
+  };
+
+  const markAllAsRead = () => {
+    toast({
+      title: "All Notifications Marked as Read",
+      description: "All notifications have been marked as read.",
+    });
+  };
+
+  const unreadCount = mockNotifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      
-      <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Notifications & Broadcasts
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
-                Stay updated with important alerts and messages
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <Button variant="outline" onClick={markAllAsRead} disabled={getUnreadCount() === 0}>
-                Mark All as Read
-              </Button>
-              {canBroadcast && (
-                <Button>New Broadcast</Button>
+    <div className="flex min-h-screen w-full" style={{ backgroundColor: '#F9EDED' }}>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-8">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+              {unreadCount > 0 && (
+                <Badge className="bg-[#E87070] text-white">
+                  {unreadCount} new
+                </Badge>
               )}
             </div>
           </div>
-        </div>
+          <Button onClick={markAllAsRead} variant="outline" className="border-[#E87070] text-[#E87070] hover:bg-[#E87070] hover:text-white">
+            Mark All as Read
+          </Button>
+        </header>
+        
+        <main className="flex-1 px-8 py-6">
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
+              <TabsTrigger value="hazards">Hazards</TabsTrigger>
+              <TabsTrigger value="system">System</TabsTrigger>
+            </TabsList>
 
-        <Tabs defaultValue="all" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all" className="relative">
-              All
-              {getUnreadCount() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getUnreadCount()}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="safety" className="relative">
-              Safety
-              {getUnreadCount('safety') > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getUnreadCount('safety')}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="broadcast">Broadcasts</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-            <TabsTrigger value="info">Info</TabsTrigger>
-          </TabsList>
-
-          {['all', 'safety', 'broadcast', 'system', 'info'].map(tab => (
-            <TabsContent key={tab} value={tab} className="space-y-4">
-              {filterNotifications(tab === 'all' ? null : tab).length > 0 ? (
-                filterNotifications(tab === 'all' ? null : tab).map(notification => (
-                  <Card
-                    key={notification.id}
-                    className={`hover:shadow-md transition-shadow ${
-                      !notification.isRead ? 'border-l-4 border-l-primary' : ''
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start">
-                        <div className="text-xl mr-3 mt-1">{getTypeIcon(notification.type)}</div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h3 className={`text-lg font-medium ${!notification.isRead ? 'font-bold' : ''}`}>
-                              {notification.title}
-                            </h3>
-                            <Badge variant={getPriorityColor(notification.priority)}>
-                              {notification.priority}
-                            </Badge>
-                          </div>
-                          <p className="text-muted-foreground mt-1">{notification.message}</p>
-                          <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
-                            <div>
-                              <span>From: {notification.sender}</span>
-                              <span className="ml-4">{formatTimestamp(notification.timestamp)}</span>
-                            </div>
-                            <div className="flex space-x-2">
+            <TabsContent value={selectedTab} className="space-y-4">
+              {filteredNotifications.length > 0 ? (
+                filteredNotifications.map(notification => (
+                  <Card key={notification.id} className={`bg-white shadow-lg transition-all hover:shadow-xl ${!notification.isRead ? 'border-l-4 border-[#E87070]' : ''}`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-4 flex-1">
+                          <div className="text-2xl">{getNotificationIcon(notification.type)}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <h3 className={`font-medium ${!notification.isRead ? 'text-gray-900 font-semibold' : 'text-gray-800'}`}>
+                                {notification.title}
+                              </h3>
+                              <Badge className={getPriorityColor(notification.priority)}>
+                                {notification.priority}
+                              </Badge>
                               {!notification.isRead && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => markAsRead(notification.id)}
-                                >
-                                  Mark as Read
-                                </Button>
+                                <Badge className="bg-[#E87070] text-white text-xs">
+                                  New
+                                </Badge>
                               )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => deleteNotification(notification.id)}
-                              >
-                                Delete
-                              </Button>
+                            </div>
+                            <p className="text-gray-600 mb-2">{notification.message}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <span>{formatTime(notification.timestamp)}</span>
+                              {notification.zone && (
+                                <span>• {notification.zone}</span>
+                              )}
                             </div>
                           </div>
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          {!notification.isRead && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => markAsRead(notification.id)}
+                              className="border-[#E87070] text-[#E87070] hover:bg-[#E87070] hover:text-white"
+                            >
+                              Mark as Read
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" className="text-gray-600 hover:bg-gray-100">
+                            View Details
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))
               ) : (
-                <div className="text-center py-10">
-                  <div className="text-4xl mb-4">🔔</div>
-                  <p className="text-muted-foreground">
-                    No{' '}
-                    {tab !== 'all' ? `${tab} notifications` : 'notifications'}{' '}
-                    to display
-                  </p>
-                </div>
+                <Card className="bg-white shadow-lg">
+                  <CardContent className="p-12 text-center">
+                    <div className="text-4xl mb-4">🔔</div>
+                    <h3 className="text-xl font-medium text-gray-900 mb-2">No notifications</h3>
+                    <p className="text-gray-600">
+                      {selectedTab === 'unread' 
+                        ? "You're all caught up! No unread notifications."
+                        : `No ${selectedTab} notifications found.`
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
-          ))}
-        </Tabs>
+          </Tabs>
 
-        {canBroadcast && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>Send Broadcast</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  As a manager, you can send broadcasts to all workers in your zones. This feature would allow you to compose and send important announcements.
-                </p>
-                <Button className="w-full">Create New Broadcast Message</Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </main>
+          {/* Quick Stats */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900 font-bold flex items-center space-x-2">
+                  <span>⚠️</span>
+                  <span>Active Hazards</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">3</div>
+                <p className="text-sm text-gray-600">Require immediate attention</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900 font-bold flex items-center space-x-2">
+                  <span>👥</span>
+                  <span>Active Workers</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">24</div>
+                <p className="text-sm text-gray-600">Currently on-site</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-gray-900 font-bold flex items-center space-x-2">
+                  <span>📍</span>
+                  <span>Active Zones</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">8</div>
+                <p className="text-sm text-gray-600">Out of 12 total zones</p>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </SidebarInset>
     </div>
   );
 };

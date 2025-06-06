@@ -1,265 +1,383 @@
 
 import React, { useState } from 'react';
-import Navigation from '../../components/layout/Navigation';
+import { SidebarInset, SidebarTrigger } from '../../components/ui/sidebar';
+import AppSidebar from '../../components/layout/AppSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '../../components/ui/avatar';
 import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/use-toast';
 
 const ProfileScreen: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
+  const [editedProfile, setEditedProfile] = useState({
     name: user?.name || '',
-    phone: user?.phone || '',
     email: user?.email || '',
+    phone: '+44 7123 456789',
+    department: 'Safety Management',
+    employeeId: 'EMP001',
   });
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  if (!user) {
-    return null;
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUser(profileData);
-    
+  const handleSave = () => {
     toast({
       title: "Profile Updated",
       description: "Your profile information has been successfully updated.",
     });
-    
     setIsEditing(false);
   };
 
-  const getRoleBadgeColor = (role: string) => {
+  const handleCancel = () => {
+    setEditedProfile({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: '+44 7123 456789',
+      department: 'Safety Management',
+      employeeId: 'EMP001',
+    });
+    setIsEditing(false);
+  };
+
+  const activityHistory = [
+    {
+      id: '1',
+      action: 'Checked into Zone Alpha',
+      timestamp: new Date('2024-03-01T09:30:00'),
+      zone: 'Zone Alpha',
+      type: 'check-in',
+    },
+    {
+      id: '2',
+      action: 'Reported hazard in Main Entrance',
+      timestamp: new Date('2024-03-01T10:15:00'),
+      zone: 'Zone Alpha',
+      type: 'hazard',
+    },
+    {
+      id: '3',
+      action: 'Updated zone documentation',
+      timestamp: new Date('2024-02-29T16:45:00'),
+      zone: 'Zone Beta',
+      type: 'document',
+    },
+    {
+      id: '4',
+      action: 'Completed safety training',
+      timestamp: new Date('2024-02-28T14:30:00'),
+      zone: null,
+      type: 'training',
+    },
+  ];
+
+  const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'super_admin':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'client_admin':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        return 'Super Administrator';
       case 'zone_manager':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        return 'Zone Manager';
       case 'zone_worker':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300';
+        return 'Zone Worker';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return role;
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part.charAt(0).toUpperCase())
-      .join('')
-      .slice(0, 2);
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return 'bg-purple-100 text-purple-800';
+      case 'zone_manager':
+        return 'bg-blue-100 text-blue-800';
+      case 'zone_worker':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'check-in':
+        return '🚪';
+      case 'hazard':
+        return '⚠️';
+      case 'document':
+        return '📄';
+      case 'training':
+        return '🎓';
+      default:
+        return '📝';
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      
-      <main className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Your Profile</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            View and manage your personal information
-          </p>
-        </div>
-
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="flex flex-col md:flex-row">
-                <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-8 flex flex-col items-center">
-                  <Avatar className="w-32 h-32">
-                    {(previewUrl || user.profileImage) ? (
-                      <AvatarImage src={previewUrl || user.profileImage} alt={user.name} />
-                    ) : (
-                      <AvatarFallback className="text-2xl">{getInitials(user.name)}</AvatarFallback>
-                    )}
-                  </Avatar>
-
-                  {isEditing && (
-                    <div className="mt-4">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="max-w-[200px] text-sm"
-                      />
-                    </div>
-                  )}
-
-                  <div className="mt-4">
-                    <Badge className={`${getRoleBadgeColor(user.role)} text-xs font-medium px-3 py-1`}>
-                      {user.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-2">
-                      Full Name
-                    </label>
-                    {isEditing ? (
-                      <Input
-                        id="name"
-                        value={profileData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
-                        required
-                      />
-                    ) : (
-                      <p className="text-gray-800 dark:text-gray-200">{user.name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2">
-                      Email Address
-                    </label>
-                    {isEditing ? (
-                      <Input
-                        id="email"
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        required
-                      />
-                    ) : (
-                      <p className="text-gray-800 dark:text-gray-200">{user.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium mb-2">
-                      Phone Number
-                    </label>
-                    {isEditing ? (
-                      <Input
-                        id="phone"
-                        value={profileData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        required
-                      />
-                    ) : (
-                      <p className="text-gray-800 dark:text-gray-200">{user.phone}</p>
-                    )}
-                  </div>
-
-                  <div className="pt-4">
-                    {isEditing ? (
-                      <div className="flex space-x-4">
-                        <Button type="submit">Save Changes</Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setIsEditing(false);
-                            setProfileData({
-                              name: user.name,
-                              phone: user.phone,
-                              email: user.email,
-                            });
-                            setPreviewUrl(null);
-                          }}
-                        >
-                          Cancel
-                        </Button>
+    <div className="flex min-h-screen w-full" style={{ backgroundColor: '#F9EDED' }}>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-8">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+          </div>
+          {!isEditing ? (
+            <Button onClick={() => setIsEditing(true)} className="bg-[#E87070] hover:bg-[#d86060] text-white">
+              Edit Profile
+            </Button>
+          ) : (
+            <div className="flex space-x-2">
+              <Button onClick={handleCancel} variant="outline">
+                Cancel
+              </Button>
+              <Button onClick={handleSave} className="bg-[#E87070] hover:bg-[#d86060] text-white">
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </header>
+        
+        <main className="flex-1 px-8 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Profile Information */}
+            <div className="lg:col-span-1">
+              <Card className="bg-white shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 font-bold">Profile Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Avatar */}
+                    <div className="text-center">
+                      <div className="w-24 h-24 bg-[#E87070] rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
-                    ) : (
-                      <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-                    )}
+                      <Badge className={getRoleColor(user?.role || '')}>
+                        {getRoleDisplayName(user?.role || '')}
+                      </Badge>
+                    </div>
+
+                    {/* Profile Fields */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="name">Full Name</Label>
+                        {isEditing ? (
+                          <Input
+                            id="name"
+                            value={editedProfile.name}
+                            onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="mt-1 text-gray-900 font-medium">{user?.name}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        {isEditing ? (
+                          <Input
+                            id="email"
+                            type="email"
+                            value={editedProfile.email}
+                            onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="mt-1 text-gray-900 font-medium">{user?.email}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="phone">Phone</Label>
+                        {isEditing ? (
+                          <Input
+                            id="phone"
+                            value={editedProfile.phone}
+                            onChange={(e) => setEditedProfile({ ...editedProfile, phone: e.target.value })}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="mt-1 text-gray-900 font-medium">{editedProfile.phone}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="department">Department</Label>
+                        {isEditing ? (
+                          <Input
+                            id="department"
+                            value={editedProfile.department}
+                            onChange={(e) => setEditedProfile({ ...editedProfile, department: e.target.value })}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="mt-1 text-gray-900 font-medium">{editedProfile.department}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="employeeId">Employee ID</Label>
+                        <p className="mt-1 text-gray-900 font-medium">{editedProfile.employeeId}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Security</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Change Password</h3>
-                <p className="text-muted-foreground mb-4">
-                  Regularly updating your password helps keep your account secure.
-                </p>
-                <Button>Change Password</Button>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-2">Two-Factor Authentication</h3>
-                <p className="text-muted-foreground mb-4">
-                  Add an extra layer of security to your account by enabling two-factor authentication.
-                </p>
-                <div className="flex items-center">
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 mr-4">
-                    Enabled
-                  </Badge>
-                  <Button variant="outline">Configure 2FA</Button>
-                </div>
-              </div>
+              {/* Quick Stats */}
+              <Card className="bg-white shadow-lg mt-6">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 font-bold">Quick Stats</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Zones Managed:</span>
+                      <span className="font-medium text-gray-900">{user?.zoneIds?.length || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Hours This Week:</span>
+                      <span className="font-medium text-gray-900">42.5</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Hazards Reported:</span>
+                      <span className="font-medium text-gray-900">7</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Safety Score:</span>
+                      <span className="font-medium text-green-600">98%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Account ID:</span>
-                <span>{user.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Last Login:</span>
-                <span>Today at 09:15</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Account Created:</span>
-                <span>15 January 2024</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                  Active
-                </Badge>
-              </div>
+            {/* Activity and Settings */}
+            <div className="lg:col-span-2">
+              <Tabs defaultValue="activity" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+                  <TabsTrigger value="settings">Settings</TabsTrigger>
+                  <TabsTrigger value="security">Security</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="activity" className="space-y-4">
+                  <Card className="bg-white shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-bold">Recent Activity</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {activityHistory.map(activity => (
+                          <div key={activity.id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50">
+                            <div className="text-2xl">{getActivityIcon(activity.type)}</div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900">{activity.action}</h4>
+                              <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+                                <span>{formatTime(activity.timestamp)}</span>
+                                {activity.zone && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{activity.zone}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="settings" className="space-y-4">
+                  <Card className="bg-white shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-bold">Notification Preferences</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-gray-900">Email Notifications</h4>
+                            <p className="text-sm text-gray-600">Receive notifications via email</p>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Enabled
+                          </Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-gray-900">Hazard Alerts</h4>
+                            <p className="text-sm text-gray-600">Immediate alerts for new hazards</p>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Enabled
+                          </Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-gray-900">Zone Updates</h4>
+                            <p className="text-sm text-gray-600">Updates about zone activities</p>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Disabled
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="security" className="space-y-4">
+                  <Card className="bg-white shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-bold">Security Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Change Password</h4>
+                          <div className="space-y-3">
+                            <Input type="password" placeholder="Current password" />
+                            <Input type="password" placeholder="New password" />
+                            <Input type="password" placeholder="Confirm new password" />
+                            <Button className="bg-[#E87070] hover:bg-[#d86060] text-white">
+                              Update Password
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="pt-4 border-t">
+                          <h4 className="font-medium text-gray-900 mb-2">Two-Factor Authentication</h4>
+                          <p className="text-sm text-gray-600 mb-3">
+                            Add an extra layer of security to your account
+                          </p>
+                          <Button variant="outline" className="border-[#E87070] text-[#E87070] hover:bg-[#E87070] hover:text-white">
+                            Enable 2FA
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
-          </CardContent>
-        </Card>
-      </main>
+          </div>
+        </main>
+      </SidebarInset>
     </div>
   );
 };
