@@ -24,6 +24,9 @@ import NotificationsScreen from './screens/notifications/NotificationsScreen';
 import ReportsScreen from './screens/reports/ReportsScreen';
 import ProfileScreen from './screens/profile/ProfileScreen';
 import SettingsScreen from './screens/settings/SettingsScreen';
+import EmployeesScreen from './screens/employees/EmployeesScreen';
+import OnboardEmployeeScreen from './screens/employees/OnboardEmployeeScreen';
+import ClientsScreen from './screens/clients/ClientsScreen';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -57,6 +60,9 @@ function App() {
                     <Route path="/reports" element={<ProtectedRoute><ReportsScreen /></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
+                    <Route path="/employees" element={<ProtectedRoute><EmployeesScreen /></ProtectedRoute>} />
+                    <Route path="/employees/onboard" element={<ProtectedRoute><OnboardEmployeeScreen /></ProtectedRoute>} />
+                    <Route path="/clients" element={<ProtectedRoute><ClientsScreen /></ProtectedRoute>} />
                     
                     {/* Redirect */}
                     <Route path="*" element={<Navigate to="/" replace />} />
