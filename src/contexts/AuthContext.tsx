@@ -49,6 +49,40 @@ const initialState: AuthState = {
   tempUserData: null,
 };
 
+// Demo users data
+const demoUsers = {
+  'admin@zonebudapp.com': {
+    id: 'demo-admin-123',
+    email: 'admin@zonebudapp.com',
+    name: 'Admin User',
+    phone: '+44 7700 900123',
+    role: 'super_admin' as UserRole,
+    zoneIds: ['demo-zone-1', 'demo-zone-2'],
+    isOnline: true,
+    lastSeen: new Date(),
+  },
+  'manager@zonebudapp.com': {
+    id: 'demo-manager-123',
+    email: 'manager@zonebudapp.com',
+    name: 'Zone Manager',
+    phone: '+44 7700 900124',
+    role: 'zone_manager' as UserRole,
+    zoneIds: ['demo-zone-1'],
+    isOnline: true,
+    lastSeen: new Date(),
+  },
+  'worker@zonebudapp.com': {
+    id: 'demo-worker-123',
+    email: 'worker@zonebudapp.com',
+    name: 'Zone Worker',
+    phone: '+44 7700 900125',
+    role: 'zone_worker' as UserRole,
+    zoneIds: ['demo-zone-1'],
+    isOnline: true,
+    lastSeen: new Date(),
+  },
+};
+
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'AUTH_START':
@@ -138,6 +172,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'AUTH_START' });
     
     try {
+      // Check if it's a demo user
+      if (email in demoUsers && password === 'password123') {
+        const demoUser = demoUsers[email as keyof typeof demoUsers];
+        const mockSession = {
+          access_token: 'demo-token',
+          refresh_token: 'demo-refresh',
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+          token_type: 'bearer',
+          user: {
+            id: demoUser.id,
+            email: demoUser.email,
+          }
+        } as Session;
+        
+        dispatch({ type: 'AUTH_SUCCESS', payload: { user: demoUser, session: mockSession } });
+        return;
+      }
+
+      // Try Supabase auth for real users
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

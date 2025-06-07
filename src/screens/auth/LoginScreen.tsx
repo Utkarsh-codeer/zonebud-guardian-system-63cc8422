@@ -27,7 +27,13 @@ const LoginScreen: React.FC = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate('/verify-otp');
+      if (!error) {
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully',
+        });
+        navigate('/');
+      }
     } catch (err) {
       toast({
         title: 'Error',
@@ -56,7 +62,7 @@ const LoginScreen: React.FC = () => {
             <span className="text-white text-3xl font-extrabold">ZB</span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-            Welcome back 👋
+            Welcome to ZoneBud 👋
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
             Please enter your credentials to continue
@@ -101,24 +107,43 @@ const LoginScreen: React.FC = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full py-2 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]">
+            <Button 
+              type="submit" 
+              className="w-full py-2 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
+              disabled={isLoading}
+            >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
           <div className="pt-2 border-t text-left space-y-3">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Use a demo account
+              Try demo accounts (password: password123)
             </p>
             <div className="grid gap-2">
-              <Button variant="outline" size="sm" onClick={() => fillDemoCredentials('admin')} className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
-                Super Admin
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fillDemoCredentials('admin')} 
+                className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
+              >
+                Super Admin Demo
               </Button>
-              <Button variant="outline" size="sm" onClick={() => fillDemoCredentials('manager')} className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
-                Zone Manager
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fillDemoCredentials('manager')} 
+                className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
+              >
+                Zone Manager Demo
               </Button>
-              <Button variant="outline" size="sm" onClick={() => fillDemoCredentials('worker')} className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white">
-                Zone Worker
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fillDemoCredentials('worker')} 
+                className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
+              >
+                Zone Worker Demo
               </Button>
             </div>
           </div>
