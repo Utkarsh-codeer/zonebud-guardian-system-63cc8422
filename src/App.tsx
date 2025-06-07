@@ -2,17 +2,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ZoneProvider } from './contexts/ZoneContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from './components/ui/toaster';
 import { SidebarProvider } from './components/ui/sidebar';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import LoginScreen from './screens/auth/LoginScreen';
-import SignupScreen from './screens/auth/SignupScreen';
+import AuthScreen from './components/auth/AuthScreen';
 import OTPVerificationScreen from './screens/auth/OTPVerificationScreen';
 import PINEntryScreen from './screens/auth/PINEntryScreen';
-import OnboardingScreen from './screens/auth/OnboardingScreen';
 import Dashboard from './screens/dashboard/Dashboard';
 import ZoneMapScreen from './screens/zones/ZoneMapScreen';
 import ZoneListScreen from './screens/zones/ZoneListScreen';
@@ -31,6 +28,37 @@ import './App.css';
 
 const queryClient = new QueryClient();
 
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, pendingOTPVerification, pendingPINEntry } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9EDED]">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-[#E87070] rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-2xl">Z</span>
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pendingOTPVerification) {
+    return <Navigate to="/verify-otp" replace />;
+  }
+
+  if (pendingPINEntry) {
+    return <Navigate to="/enter-pin" replace />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,12 +69,10 @@ function App() {
               <Router>
                 <div className="App min-h-screen bg-background w-full">
                   <Routes>
-                    {/* Public Routes */}
-                    <Route path="/login" element={<LoginScreen />} />
-                    <Route path="/signup" element={<SignupScreen />} />
+                    {/* Auth Routes */}
+                    <Route path="/auth" element={<AuthScreen />} />
                     <Route path="/verify-otp" element={<OTPVerificationScreen />} />
                     <Route path="/enter-pin" element={<PINEntryScreen />} />
-                    <Route path="/onboarding" element={<OnboardingScreen />} />
                     
                     {/* Protected Routes */}
                     <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -64,7 +90,9 @@ function App() {
                     <Route path="/employees/onboard" element={<ProtectedRoute><OnboardEmployeeScreen /></ProtectedRoute>} />
                     <Route path="/clients" element={<ProtectedRoute><ClientsScreen /></ProtectedRoute>} />
                     
-                    {/* Redirect */}
+                    {/* Redirects */}
+                    <Route path="/login" element={<Navigate to="/auth" replace />} />
+                    <Route path="/signup" element={<Navigate to="/auth" replace />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                   <Toaster />

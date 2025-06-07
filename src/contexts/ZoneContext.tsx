@@ -1,121 +1,35 @@
 
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { useAuth } from './AuthContext';
 
 export interface Zone {
   id: string;
   name: string;
-  description: string;
-  status: 'pending' | 'approved' | 'active' | 'suspended' | 'closed' | 'archived';
-  location: {
-    lat: number;
-    lng: number;
-    radius: number;
-    address: string;
-  };
-  startDate: Date;
-  endDate: Date;
-  managerId: string;
-  workerIds: string[];
-  documentIds: string[];
-  hazardIds: string[];
-  presenceData: {
-    userId: string;
-    checkInTime: Date;
-    checkOutTime?: Date;
-    isActive: boolean;
-  }[];
+  description?: string;
+  location?: any;
+  status: 'active' | 'pending' | 'approved' | 'suspended' | 'closed' | 'archived';
+  managerId?: string;
+  presenceData: PresenceData[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface ZoneState {
+export interface PresenceData {
+  id: string;
+  userId: string;
+  isActive: boolean;
+  timestamp: Date;
+}
+
+interface ZoneContextType {
   zones: Zone[];
-  currentZone: Zone | null;
-  userLocation: { lat: number; lng: number } | null;
-  isLoading: boolean;
+  loading: boolean;
   error: string | null;
-}
-
-type ZoneAction =
-  | { type: 'SET_ZONES'; payload: Zone[] }
-  | { type: 'SET_CURRENT_ZONE'; payload: Zone | null }
-  | { type: 'UPDATE_ZONE'; payload: Zone }
-  | { type: 'SET_USER_LOCATION'; payload: { lat: number; lng: number } }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'CHECK_IN_ZONE'; payload: { zoneId: string; userId: string } }
-  | { type: 'CHECK_OUT_ZONE'; payload: { zoneId: string; userId: string } };
-
-const initialState: ZoneState = {
-  zones: [],
-  currentZone: null,
-  userLocation: null,
-  isLoading: false,
-  error: null,
-};
-
-const zoneReducer = (state: ZoneState, action: ZoneAction): ZoneState => {
-  switch (action.type) {
-    case 'SET_ZONES':
-      return { ...state, zones: action.payload };
-    case 'SET_CURRENT_ZONE':
-      return { ...state, currentZone: action.payload };
-    case 'UPDATE_ZONE':
-      return {
-        ...state,
-        zones: state.zones.map(zone =>
-          zone.id === action.payload.id ? action.payload : zone
-        ),
-      };
-    case 'SET_USER_LOCATION':
-      return { ...state, userLocation: action.payload };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    case 'CHECK_IN_ZONE':
-      return {
-        ...state,
-        zones: state.zones.map(zone =>
-          zone.id === action.payload.zoneId
-            ? {
-                ...zone,
-                presenceData: [
-                  ...zone.presenceData.filter(p => p.userId !== action.payload.userId),
-                  {
-                    userId: action.payload.userId,
-                    checkInTime: new Date(),
-                    isActive: true,
-                  },
-                ],
-              }
-            : zone
-        ),
-      };
-    case 'CHECK_OUT_ZONE':
-      return {
-        ...state,
-        zones: state.zones.map(zone =>
-          zone.id === action.payload.zoneId
-            ? {
-                ...zone,
-                presenceData: zone.presenceData.map(p =>
-                  p.userId === action.payload.userId && p.isActive
-                    ? { ...p, checkOutTime: new Date(), isActive: false }
-                    : p
-                ),
-              }
-            : zone
-        ),
-      };
-    default:
-      return state;
-  }
-};
-
-interface ZoneContextType extends ZoneState {
-  checkInToZone: (zoneId: string, userId: string) => void;
-  checkOutFromZone: (zoneId: string, userId: string) => void;
-  updateUserLocation: (location: { lat: number; lng: number }) => void;
-  setCurrentZone: (zone: Zone | null) => void;
+  fetchZones: () => Promise<void>;
+  createZone: (zone: Partial<Zone>) => Promise<void>;
+  updateZone: (id: string, updates: Partial<Zone>) => Promise<void>;
+  deleteZone: (id: string) => Promise<void>;
 }
 
 const ZoneContext = createContext<ZoneContextType | undefined>(undefined);
@@ -129,103 +43,121 @@ export const useZone = () => {
 };
 
 export const ZoneProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(zoneReducer, initialState);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  // Demo zones data
-  const demoZones: Zone[] = [
-    {
-      id: 'zone-1',
-      name: 'Construction Site Alpha',
-      description: 'Main construction site for residential development',
-      status: 'active',
-      location: {
-        lat: 51.5074,
-        lng: -0.1278,
-        radius: 500,
-        address: 'London, UK',
-      },
-      startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-12-31'),
-      managerId: '2',
-      workerIds: ['3'],
-      documentIds: ['doc-1', 'doc-2'],
-      hazardIds: ['hazard-1'],
-      presenceData: [
-        {
-          userId: '3',
-          checkInTime: new Date(Date.now() - 3600000),
-          isActive: true,
-        },
-      ],
-    },
-    {
-      id: 'zone-2',
-      name: 'Warehouse Beta',
-      description: 'Storage and logistics facility',
-      status: 'active',
-      location: {
-        lat: 51.5084,
-        lng: -0.1288,
-        radius: 300,
-        address: 'London, UK',
-      },
-      startDate: new Date('2024-02-01'),
-      endDate: new Date('2024-11-30'),
-      managerId: '2',
-      workerIds: [],
-      documentIds: ['doc-3'],
-      hazardIds: [],
-      presenceData: [],
-    },
-    {
-      id: 'zone-3',
-      name: 'Office Complex Gamma',
-      description: 'Corporate headquarters renovation',
-      status: 'pending',
-      location: {
-        lat: 51.5094,
-        lng: -0.1298,
-        radius: 200,
-        address: 'London, UK',
-      },
-      startDate: new Date('2024-06-01'),
-      endDate: new Date('2025-05-31'),
-      managerId: '2',
-      workerIds: [],
-      documentIds: [],
-      hazardIds: [],
-      presenceData: [],
-    },
-  ];
+  const fetchZones = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('zones')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  React.useEffect(() => {
-    dispatch({ type: 'SET_ZONES', payload: demoZones });
-  }, []);
+      if (error) throw error;
 
-  const checkInToZone = (zoneId: string, userId: string) => {
-    dispatch({ type: 'CHECK_IN_ZONE', payload: { zoneId, userId } });
+      const mappedZones: Zone[] = (data || []).map(zone => ({
+        id: zone.id,
+        name: zone.name,
+        description: zone.description,
+        location: zone.location,
+        status: zone.status,
+        managerId: zone.manager_id,
+        presenceData: [], // Will be populated from real-time data
+        createdAt: new Date(zone.created_at),
+        updatedAt: new Date(zone.updated_at),
+      }));
+
+      setZones(mappedZones);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch zones');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const checkOutFromZone = (zoneId: string, userId: string) => {
-    dispatch({ type: 'CHECK_OUT_ZONE', payload: { zoneId, userId } });
+  const createZone = async (zoneData: Partial<Zone>) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('zones')
+        .insert({
+          name: zoneData.name,
+          description: zoneData.description,
+          location: zoneData.location,
+          manager_id: user.id,
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await fetchZones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create zone');
+    }
   };
 
-  const updateUserLocation = (location: { lat: number; lng: number }) => {
-    dispatch({ type: 'SET_USER_LOCATION', payload: location });
+  const updateZone = async (id: string, updates: Partial<Zone>) => {
+    try {
+      const { error } = await supabase
+        .from('zones')
+        .update({
+          name: updates.name,
+          description: updates.description,
+          location: updates.location,
+          status: updates.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchZones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update zone');
+    }
   };
 
-  const setCurrentZone = (zone: Zone | null) => {
-    dispatch({ type: 'SET_CURRENT_ZONE', payload: zone });
+  const deleteZone = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('zones')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchZones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete zone');
+    }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchZones();
+    }
+  }, [user]);
 
   return (
     <ZoneContext.Provider
       value={{
-        ...state,
-        checkInToZone,
-        checkOutFromZone,
-        updateUserLocation,
-        setCurrentZone,
+        zones,
+        loading,
+        error,
+        fetchZones,
+        createZone,
+        updateZone,
+        deleteZone,
       }}
     >
       {children}

@@ -1,9 +1,11 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'super_admin' | 'client_admin' | 'zone_manager' | 'zone_worker';
 
-export interface User {
+export interface AuthUser {
   id: string;
   email: string;
   name: string;
@@ -16,7 +18,8 @@ export interface User {
 }
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -27,18 +30,19 @@ interface AuthState {
 
 type AuthAction =
   | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: User }
+  | { type: 'AUTH_SUCCESS'; payload: { user: AuthUser; session: Session } }
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'LOGOUT' }
-  | { type: 'UPDATE_USER'; payload: Partial<User> }
+  | { type: 'UPDATE_USER'; payload: Partial<AuthUser> }
   | { type: 'OTP_PENDING'; payload: any }
   | { type: 'PIN_PENDING' }
   | { type: 'RESET_AUTH_STATE' };
 
 const initialState: AuthState = {
   user: null,
+  session: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   error: null,
   pendingOTPVerification: false,
   pendingPINEntry: false,
@@ -52,7 +56,8 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
     case 'AUTH_SUCCESS':
       return {
         ...state,
-        user: action.payload,
+        user: action.payload.user,
+        session: action.payload.session,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -64,20 +69,15 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         user: null,
+        session: null,
         isAuthenticated: false,
         isLoading: false,
         error: action.payload,
       };
     case 'LOGOUT':
       return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
+        ...initialState,
         isLoading: false,
-        error: null,
-        pendingOTPVerification: false,
-        pendingPINEntry: false,
-        tempUserData: null,
       };
     case 'UPDATE_USER':
       return {
@@ -117,7 +117,7 @@ interface AuthContextType extends AuthState {
   verifyOTP: (otp: string) => Promise<void>;
   verifyPIN: (pin: string) => Promise<void>;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<AuthUser>) => void;
   resetAuthState: () => void;
 }
 
@@ -134,54 +134,21 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Mock demo users
-  const demoUsers: Record<string, User> = {
-    'admin@zonebudapp.com': {
-      id: '1',
-      email: 'admin@zonebudapp.com',
-      name: 'Sarah Johnson',
-      phone: '+44 7700 900123',
-      role: 'super_admin',
-      profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b932?w=150',
-      zoneIds: ['zone-1', 'zone-2', 'zone-3'],
-      isOnline: true,
-      lastSeen: new Date(),
-    },
-    'manager@zonebudapp.com': {
-      id: '2',
-      email: 'manager@zonebudapp.com',
-      name: 'James Mitchell',
-      phone: '+44 7700 900124',
-      role: 'zone_manager',
-      profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-      zoneIds: ['zone-1', 'zone-2'],
-      isOnline: true,
-      lastSeen: new Date(),
-    },
-    'worker@zonebudapp.com': {
-      id: '3',
-      email: 'worker@zonebudapp.com',
-      name: 'Emma Davies',
-      phone: '+44 7700 900125',
-      role: 'zone_worker',
-      profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
-      zoneIds: ['zone-1'],
-      isOnline: false,
-      lastSeen: new Date(Date.now() - 30000),
-    },
-  };
-
   const login = async (email: string, password: string) => {
     dispatch({ type: 'AUTH_START' });
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const user = demoUsers[email];
-      if (user && password === 'password123') {
-        dispatch({ type: 'OTP_PENDING', payload: user });
-      } else {
-        throw new Error('Invalid credentials');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user && data.session) {
+        const profile = await fetchUserProfile(data.user.id);
+        const authUser = mapSupabaseUserToAuthUser(data.user, profile);
+        dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session: data.session } });
       }
     } catch (error) {
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Login failed' });
@@ -192,87 +159,117 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'AUTH_START' });
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newUser: User = {
-        id: Date.now().toString(),
+      const { data, error } = await supabase.auth.signUp({
         email: userData.email,
-        name: userData.name,
-        phone: userData.phone,
-        role: 'zone_worker',
-        zoneIds: [],
-        isOnline: true,
-        lastSeen: new Date(),
-      };
-      
-      dispatch({ type: 'OTP_PENDING', payload: newUser });
+        password: userData.password,
+        options: {
+          data: {
+            full_name: userData.name,
+            phone: userData.phone,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Create profile
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          full_name: userData.name,
+          phone: userData.phone,
+          role: 'zone_worker',
+        });
+
+        dispatch({ type: 'OTP_PENDING', payload: userData });
+      }
     } catch (error) {
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Signup failed' });
     }
   };
 
   const verifyOTP = async (otp: string) => {
-    dispatch({ type: 'AUTH_START' });
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (otp === '123456') {
-        dispatch({ type: 'PIN_PENDING' });
-      } else {
-        throw new Error('Invalid OTP');
-      }
-    } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'OTP verification failed' });
-    }
+    dispatch({ type: 'PIN_PENDING' });
   };
 
   const verifyPIN = async (pin: string) => {
-    dispatch({ type: 'AUTH_START' });
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (pin === '1234') {
-        if (state.tempUserData) {
-          localStorage.setItem('zonebudUser', JSON.stringify(state.tempUserData));
-          dispatch({ type: 'AUTH_SUCCESS', payload: state.tempUserData });
-        }
-      } else {
-        throw new Error('Invalid PIN');
+    if (pin === '1234') {
+      // Mock verification - in real app this would verify the PIN
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        const profile = await fetchUserProfile(data.session.user.id);
+        const authUser = mapSupabaseUserToAuthUser(data.session.user, profile);
+        dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session: data.session } });
       }
-    } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'PIN verification failed' });
+    } else {
+      dispatch({ type: 'AUTH_ERROR', payload: 'Invalid PIN' });
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('zonebudUser');
+  const logout = async () => {
+    await supabase.auth.signOut();
     dispatch({ type: 'LOGOUT' });
   };
 
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = (userData: Partial<AuthUser>) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });
-    if (state.user) {
-      const updatedUser = { ...state.user, ...userData };
-      localStorage.setItem('zonebudUser', JSON.stringify(updatedUser));
-    }
   };
 
   const resetAuthState = () => {
     dispatch({ type: 'RESET_AUTH_STATE' });
   };
 
+  const fetchUserProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    return data;
+  };
+
+  const mapSupabaseUserToAuthUser = (user: User, profile: any): AuthUser => {
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: profile?.full_name || user.user_metadata?.full_name || '',
+      phone: profile?.phone || user.user_metadata?.phone || '',
+      role: profile?.role || 'zone_worker',
+      zoneIds: profile?.zone_ids || [],
+      isOnline: true,
+      lastSeen: new Date(),
+    };
+  };
+
   useEffect(() => {
-    const savedUser = localStorage.getItem('zonebudUser');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        dispatch({ type: 'AUTH_SUCCESS', payload: user });
-      } catch (error) {
-        localStorage.removeItem('zonebudUser');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          const authUser = mapSupabaseUserToAuthUser(session.user, profile);
+          dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session } });
+        } else {
+          dispatch({ type: 'LOGOUT' });
+        }
       }
-    }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setTimeout(async () => {
+          const profile = await fetchUserProfile(session.user.id);
+          const authUser = mapSupabaseUserToAuthUser(session.user, profile);
+          dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session } });
+        }, 0);
+      } else {
+        dispatch({ type: 'LOGOUT' });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (

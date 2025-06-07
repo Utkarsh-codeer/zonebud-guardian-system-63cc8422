@@ -1,0 +1,25 @@
+
+import { CapacitorConfig } from '@capacitor/core';
+
+const config: CapacitorConfig = {
+  appId: 'app.lovable.f150a5f9fdc84913a9fb0accd897bbce',
+  appName: 'zonebud-guardian-system',
+  webDir: 'dist',
+  server: {
+    url: 'https://f150a5f9-fdc8-4913-a9fb-0accd897bbce.lovableproject.com?forceHideBadge=true',
+    cleartext: true
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#E87070',
+      showSpinner: false,
+    },
+    StatusBar: {
+      style: 'light',
+      backgroundColor: '#E87070',
+    },
+  },
+};
+
+export default config;

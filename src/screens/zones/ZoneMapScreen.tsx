@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SidebarInset, SidebarTrigger } from '../../components/ui/sidebar';
 import AppSidebar from '../../components/layout/AppSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -7,10 +7,12 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { useZone } from '../../contexts/ZoneContext';
 import { useAuth } from '../../contexts/AuthContext';
+import GoogleMap from '../../components/maps/GoogleMap';
 
 const ZoneMapScreen: React.FC = () => {
   const { zones } = useZone();
   const { user } = useAuth();
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const userZones = zones.filter(zone => 
     user?.zoneIds?.includes(zone.id) || zone.managerId === user?.id
@@ -20,13 +22,32 @@ const ZoneMapScreen: React.FC = () => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
-      case 'maintenance':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'inactive':
+      case 'approved':
+        return 'bg-blue-100 text-blue-800';
+      case 'suspended':
+      case 'closed':
         return 'bg-red-100 text-red-800';
+      case 'archived':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const mapMarkers = userZones
+    .filter(zone => zone.location?.lat && zone.location?.lng)
+    .map(zone => ({
+      id: zone.id,
+      position: { lat: zone.location.lat, lng: zone.location.lng },
+      title: zone.name,
+      info: `<div><h3>${zone.name}</h3><p>${zone.description || 'No description'}</p><p>Status: ${zone.status}</p></div>`,
+    }));
+
+  const handleLocationSelect = (location: { lat: number; lng: number }) => {
+    setSelectedLocation(location);
+    console.log('Selected location:', location);
   };
 
   return (
@@ -50,13 +71,20 @@ const ZoneMapScreen: React.FC = () => {
               <CardTitle className="text-gray-900 font-bold">Interactive Zone Map</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">🗺️</div>
-                  <p className="text-gray-500 font-medium">Map Integration Coming Soon</p>
-                  <p className="text-sm text-gray-400">Interactive zone mapping will be available here</p>
+              <GoogleMap
+                center={{ lat: 51.5074, lng: -0.1278 }}
+                zoom={12}
+                markers={mapMarkers}
+                onLocationSelect={handleLocationSelect}
+                className="h-96 w-full rounded-lg border"
+              />
+              {selectedLocation && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900">
+                    Selected Location: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+                  </p>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -100,15 +128,15 @@ const ZoneMapScreen: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Maintenance:</span>
+                    <span className="text-gray-600">Pending:</span>
                     <span className="font-bold text-yellow-600">
-                      {userZones.filter(z => z.status === 'maintenance').length}
+                      {userZones.filter(z => z.status === 'pending').length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Inactive:</span>
+                    <span className="text-gray-600">Suspended:</span>
                     <span className="font-bold text-red-600">
-                      {userZones.filter(z => z.status === 'inactive').length}
+                      {userZones.filter(z => z.status === 'suspended').length}
                     </span>
                   </div>
                 </div>
