@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: #F9EDED;
+    --background: #FAFAFA;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
@@ -24,7 +24,7 @@
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 0 74% 42%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --sidebar-background: #E87070;
     --sidebar-foreground: 210 20% 98%;
     --sidebar-primary: 224 71.4% 4.1%;
@@ -72,6 +72,39 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-color: #F9EDED;
+    background-color: #FAFAFA;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Card shadows */
+.card-shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.card-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
