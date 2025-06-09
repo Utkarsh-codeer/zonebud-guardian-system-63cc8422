@@ -54,29 +54,29 @@ const ZoneMapScreen: React.FC = () => {
     <div className="flex min-h-screen w-full" style={{ backgroundColor: '#F9EDED' }}>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-8">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-4 sm:px-8">
           <SidebarTrigger className="-ml-1" />
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">Zone Map</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Zone Map</h1>
           </div>
-          <Button className="bg-[#E87070] hover:bg-[#d86060] text-white">
+          <Button className="bg-[#E87070] hover:bg-[#d86060] text-white text-sm sm:text-base">
             + Add Zone
           </Button>
         </header>
         
-        <main className="flex-1 px-8 py-6">
-          {/* Map Container */}
-          <Card className="bg-white shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle className="text-gray-900 font-bold">Interactive Zone Map</CardTitle>
+        <main className="flex-1 px-4 sm:px-8 py-4 sm:py-6">
+          {/* Map Container - Optimized for mobile */}
+          <Card className="bg-white shadow-lg mb-4 sm:mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-gray-900 font-bold text-lg sm:text-xl">Interactive Zone Map</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               <GoogleMap
                 center={{ lat: 51.5074, lng: -0.1278 }}
                 zoom={12}
                 markers={mapMarkers}
                 onLocationSelect={handleLocationSelect}
-                className="h-96 w-full rounded-lg border"
+                className="h-64 sm:h-96 w-full rounded-lg border"
               />
               {selectedLocation && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
@@ -88,53 +88,56 @@ const ZoneMapScreen: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Zone List */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Zone List - Mobile-optimized grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
             <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-gray-900 font-bold">Active Zones</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-gray-900 font-bold text-lg sm:text-xl">Active Zones</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-6">
                 <div className="space-y-3">
                   {userZones.filter(zone => zone.status === 'active').map(zone => (
                     <div key={zone.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{zone.name}</h4>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">{zone.name}</h4>
                         <p className="text-sm text-gray-600">Parking Zone</p>
                       </div>
-                      <Badge className={getStatusColor(zone.status)}>
+                      <Badge className={`${getStatusColor(zone.status)} ml-2 flex-shrink-0`}>
                         {zone.status}
                       </Badge>
                     </div>
                   ))}
+                  {userZones.filter(zone => zone.status === 'active').length === 0 && (
+                    <p className="text-gray-500 text-center py-4">No active zones</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-gray-900 font-bold">Zone Statistics</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-gray-900 font-bold text-lg sm:text-xl">Zone Statistics</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-6">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Total Zones:</span>
+                    <span className="text-gray-600 text-sm sm:text-base">Total Zones:</span>
                     <span className="font-bold text-gray-900">{userZones.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Active Zones:</span>
+                    <span className="text-gray-600 text-sm sm:text-base">Active Zones:</span>
                     <span className="font-bold text-green-600">
                       {userZones.filter(z => z.status === 'active').length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Pending:</span>
+                    <span className="text-gray-600 text-sm sm:text-base">Pending:</span>
                     <span className="font-bold text-yellow-600">
                       {userZones.filter(z => z.status === 'pending').length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Suspended:</span>
+                    <span className="text-gray-600 text-sm sm:text-base">Suspended:</span>
                     <span className="font-bold text-red-600">
                       {userZones.filter(z => z.status === 'suspended').length}
                     </span>

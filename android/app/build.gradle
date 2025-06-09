@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 
 android {
@@ -23,7 +24,7 @@ android {
         }
     }
 
-    // Added compileOptions block to override Java version
+    // Use Java 17 consistently
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17

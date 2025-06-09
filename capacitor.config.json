@@ -1,3 +1,4 @@
+
 {
   "appId": "app.lovable.f150a5f9fdc84913a9fb0accd897bbce",
   "appName": "zonebud-guardian-system",
@@ -15,6 +16,14 @@
     "StatusBar": {
       "style": "light",
       "backgroundColor": "#E87070"
+    },
+    "Keyboard": {
+      "resize": "ionic"
     }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
   }
 }

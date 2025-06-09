@@ -23,6 +23,9 @@ declare global {
   }
 }
 
+// TODO: Replace this placeholder with your Google Maps API key
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+
 const GoogleMap: React.FC<GoogleMapProps> = ({
   center = { lat: 51.5074, lng: -0.1278 }, // London default
   zoom = 13,
@@ -32,32 +35,21 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
-  const [apiKey, setApiKey] = useState('');
-  const [isApiKeySet, setIsApiKeySet] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isApiKeyValid, setIsApiKeyValid] = useState(false);
 
   useEffect(() => {
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
-      initializeMap();
-      return;
-    }
-
-    // Check if API key is available from environment or user input
-    const storedApiKey = localStorage.getItem('googleMapsApiKey');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-      setIsApiKeySet(true);
-      loadGoogleMapsScript(storedApiKey);
+    // Check if the API key has been replaced from the placeholder
+    if (GOOGLE_MAPS_API_KEY !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+      setIsApiKeyValid(true);
+      // Check if Google Maps is already loaded
+      if (window.google && window.google.maps) {
+        initializeMap();
+        return;
+      }
+      loadGoogleMapsScript();
     }
   }, []);
-
-  useEffect(() => {
-    if (isApiKeySet && apiKey) {
-      localStorage.setItem('googleMapsApiKey', apiKey);
-      loadGoogleMapsScript(apiKey);
-    }
-  }, [isApiKeySet, apiKey]);
 
   useEffect(() => {
     if (map && markers.length > 0) {
@@ -82,13 +74,13 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   }, [map, markers]);
 
-  const loadGoogleMapsScript = (key: string) => {
+  const loadGoogleMapsScript = () => {
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       return;
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
     script.async = true;
     script.defer = true;
     
@@ -123,12 +115,6 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     setMap(googleMap);
   };
 
-  const handleApiKeySubmit = () => {
-    if (apiKey.trim()) {
-      setIsApiKeySet(true);
-    }
-  };
-
   const searchLocation = () => {
     if (!map || !searchQuery || !window.google) return;
 
@@ -153,27 +139,23 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   };
 
-  if (!isApiKeySet) {
+  if (!isApiKeyValid) {
     return (
       <div className={`${className} flex flex-col items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300`}>
         <div className="text-center p-6">
           <h3 className="text-lg font-semibold mb-4">Google Maps Integration</h3>
           <p className="text-gray-600 mb-4">
-            Please enter your Google Maps API key to enable map functionality.
+            To enable Google Maps functionality, please replace the API key placeholder in the code.
           </p>
-          <div className="flex gap-2 max-w-md">
-            <Input
-              type="password"
-              placeholder="Enter Google Maps API Key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={handleApiKeySubmit}>
-              Set Key
-            </Button>
+          <div className="bg-gray-50 p-4 rounded-lg text-left">
+            <p className="text-sm font-mono text-gray-700 mb-2">
+              File: src/components/maps/GoogleMap.tsx
+            </p>
+            <p className="text-sm font-mono text-gray-700">
+              Replace: YOUR_GOOGLE_MAPS_API_KEY_HERE
+            </p>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-gray-500 mt-4">
             Get your API key from{' '}
             <a 
               href="https://console.cloud.google.com/apis/credentials" 
