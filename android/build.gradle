@@ -23,13 +23,6 @@ allprojects {
         google()
         mavenCentral()
     }
-    
-    // Force Java 17 for all projects
-    tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-        options.release = 17
-    }
 }
 
 task clean(type: Delete) {

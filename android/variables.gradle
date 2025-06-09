@@ -14,15 +14,4 @@ ext {
     androidxJunitVersion = '1.1.5'
     androidxEspressoCoreVersion = '3.5.1'
     cordovaAndroidVersion = '10.1.1'
-    
-    // Force Java 17 for all modules
-    javaVersion = JavaVersion.VERSION_17
-}
-
-// Apply Java version to all projects
-allprojects {
-    tasks.withType(JavaCompile) {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
 }
