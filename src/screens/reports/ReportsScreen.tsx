@@ -81,15 +81,19 @@ const ReportsScreen: React.FC = () => {
     if (presenceData.length < 3) {
       presenceData.push(
         {
+          id: 'presence-4',
           userId: '4',
           checkInTime: new Date(new Date().setHours(8, 30)),
           checkOutTime: new Date(new Date().setHours(17, 15)),
           isActive: false,
+          timestamp: new Date(),
         },
         {
+          id: 'presence-5',
           userId: '5',
           checkInTime: new Date(new Date().setHours(9, 0)),
           isActive: true,
+          timestamp: new Date(),
         }
       );
     }
@@ -279,7 +283,6 @@ const ReportsScreen: React.FC = () => {
               </Card>
             </TabsContent>
 
-            
             <TabsContent value="hazards" className="space-y-6">
               <Card className="bg-white shadow-lg">
                 <CardHeader>

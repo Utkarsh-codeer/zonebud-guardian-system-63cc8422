@@ -1,3 +1,4 @@
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -21,6 +22,13 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+    
+    // Force Java 17 for all projects
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        options.release = 17
     }
 }
 
