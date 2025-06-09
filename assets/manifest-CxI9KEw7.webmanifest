@@ -1,6 +1,10 @@
 {
-  "name": "ZoneBud",
+   "name": "ZoneBud",
   "short_name": "ZoneBud",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -12,9 +16,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#f86e6e"
+  ]
 }
