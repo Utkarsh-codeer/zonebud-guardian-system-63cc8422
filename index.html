@@ -1,0 +1,103 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="manifest" href="/lovable/assets/manifest-BaOonmaA.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#E87070" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ZoneBud Guardian" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>ZoneBud Guardian System</title>
+    <style>
+      /* Prevent zoom on iOS devices */
+      input[type="text"], input[type="email"], input[type="password"], textarea, select {
+        font-size: 16px !important;
+      }
+      
+      /* Safe area handling for mobile devices */
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        margin: 0;
+        overflow-x: hidden;
+      }
+      
+      /* Prevent overscroll on mobile */
+      body {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Improve tap targets for mobile */
+      button, a, input, select, textarea {
+        -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        touch-action: manipulation;
+      }
+
+      /* Loading screen */
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #F9EDED;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+
+      #loading-screen .logo {
+        width: 64px;
+        height: 64px;
+        background: #E87070;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 16px;
+      }
+
+      #loading-screen .text {
+        color: #666;
+        font-size: 16px;
+      }
+    </style>
+    <script type="module" crossorigin src="/lovable/assets/index-CkR33Y3U.js"></script>
+    <link rel="stylesheet" crossorigin href="/lovable/assets/index-D7QhiAgW.css">
+  <link rel="manifest" href="/lovable/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/lovable/registerSW.js"></script></head>
+  <body>
+    <div id="loading-screen">
+      <div class="logo">Z</div>
+      <div class="text">Loading ZoneBud...</div>
+    </div>
+    <div id="root"></div>
+    <script>
+      // Hide loading screen when app loads
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.3s ease';
+            setTimeout(function() {
+              loadingScreen.style.display = 'none';
+            }, 300);
+          }
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>
