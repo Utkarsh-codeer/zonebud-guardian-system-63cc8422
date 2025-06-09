@@ -4,8 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: "/lovable/", // ✅ THIS FIXES THE 404 ERROR
   server: {
     host: "::",
     port: 8080,
@@ -21,18 +21,18 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "ZoneBud",
         short_name: "ZoneBud",
-        start_url: "/",
+        start_url: "/lovable/", // match the base path
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#000000",
         icons: [
           {
-            src: "/icon-192.png",
+            src: "/lovable/icon-192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/icon-512.png",
+            src: "/lovable/icon-512.png",
             sizes: "512x512",
             type: "image/png",
           },
