@@ -24,7 +24,7 @@ declare global {
 }
 
 // TODO: Replace this placeholder with your Google Maps API key
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBxKDLSkzj2K3FsBVp569FkexLTkF5gB38';
 
 const GoogleMap: React.FC<GoogleMapProps> = ({
   center = { lat: 51.5074, lng: -0.1278 }, // London default
@@ -40,7 +40,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
 
   useEffect(() => {
     // Check if the API key has been replaced from the placeholder
-    if (GOOGLE_MAPS_API_KEY !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+    if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.trim() !== '') {
       setIsApiKeyValid(true);
       // Check if Google Maps is already loaded
       if (window.google && window.google.maps) {
