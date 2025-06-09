@@ -1,1 +1,1 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/lovable/sw.js', { scope: '/lovable/' })})}
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/zonebud-guardian-system-63cc8422/sw.js', { scope: '/zonebud-guardian-system-63cc8422/' })})}
