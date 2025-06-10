@@ -21,6 +21,9 @@
     },
     "Keyboard": {
       "resize": "ionic"
+    },
+    "App": {
+      "backButtonExitApp": false
     }
   },
   "android": {

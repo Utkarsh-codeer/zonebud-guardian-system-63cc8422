@@ -3,15 +3,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#E87070" />
     <link rel="manifest" href="/public/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#E87070" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="ZoneBud Guardian" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
     <title>ZoneBud Guardian System</title>
     <style>
       /* Prevent zoom on iOS devices */
@@ -39,6 +40,26 @@
       button, a, input, select, textarea {
         -webkit-tap-highlight-color: rgba(0,0,0,0.1);
         touch-action: manipulation;
+      }
+
+      /* Orientation specific styles */
+      @media screen and (orientation: landscape) {
+        .landscape-hidden { display: none !important; }
+        .portrait-only { display: none !important; }
+      }
+
+      @media screen and (orientation: portrait) {
+        .portrait-hidden { display: none !important; }
+        .landscape-only { display: none !important; }
+      }
+
+      /* Responsive breakpoints for different orientations */
+      @media screen and (max-width: 640px) and (orientation: portrait) {
+        .mobile-portrait { display: block !important; }
+      }
+
+      @media screen and (max-height: 640px) and (orientation: landscape) {
+        .mobile-landscape { display: block !important; }
       }
 
       /* Loading screen */
@@ -74,9 +95,31 @@
         color: #666;
         font-size: 16px;
       }
+
+      /* Offline indicator */
+      .offline-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #f59e0b;
+        color: white;
+        text-align: center;
+        padding: 8px;
+        z-index: 10000;
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .offline-indicator.show {
+        transform: translateY(0);
+      }
     </style>
   </head>
   <body>
+    <div id="offline-indicator" class="offline-indicator">
+      You're offline. Some features may be limited.
+    </div>
     <div id="loading-screen">
       <div class="logo">Z</div>
       <div class="text">Loading ZoneBud...</div>
@@ -84,6 +127,32 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Offline/Online detection
+      function updateOnlineStatus() {
+        const offlineIndicator = document.getElementById('offline-indicator');
+        if (navigator.onLine) {
+          offlineIndicator.classList.remove('show');
+        } else {
+          offlineIndicator.classList.add('show');
+        }
+      }
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      updateOnlineStatus();
+
+      // Orientation change handling
+      function handleOrientationChange() {
+        // Force reflow on orientation change
+        document.body.style.height = window.innerHeight + 'px';
+        setTimeout(() => {
+          document.body.style.height = '';
+        }, 500);
+      }
+
+      window.addEventListener('orientationchange', handleOrientationChange);
+      window.addEventListener('resize', handleOrientationChange);
+
       // Hide loading screen when app loads
       window.addEventListener('load', function() {
         setTimeout(function() {
@@ -97,6 +166,19 @@
           }
         }, 1000);
       });
+
+      // Service Worker registration for offline support
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/zonebud-guardian-system-63cc8422/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
     </script>
   </body>
 </html>

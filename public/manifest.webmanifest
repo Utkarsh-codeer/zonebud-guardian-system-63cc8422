@@ -1,3 +1,4 @@
+
 {
   "name": "ZoneBud Guardian System",
   "short_name": "ZoneBud",
@@ -5,9 +6,9 @@
   "start_url": "/zonebud-guardian-system-63cc8422/",
   "scope": "/zonebud-guardian-system-63cc8422/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#ffffff",
-  "theme_color": "#f86e6e",
+  "theme_color": "#E87070",
   "categories": ["utilities", "productivity", "security"],
   "icons": [
     {
