@@ -1,48 +1,35 @@
 
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { Button } from '../../components/ui/button';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input-otp';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../ui/input-otp';
 import { useAuth } from '../../contexts/AuthContext';
-import { useToast } from '../../components/ui/use-toast';
+import { useToast } from '../ui/use-toast';
 
-const OTPVerificationScreen: React.FC = () => {
+const DeviceVerificationScreen: React.FC = () => {
   const [otp, setOtp] = useState('');
-  const { verifyLoginCode, isAuthenticated, isLoading, error, pendingOTPVerification, tempUserEmail } = useAuth();
+  const { verifyDeviceOTP, isLoading, error, pendingDeviceVerification } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (!pendingOTPVerification) {
-    return <Navigate to="/login" replace />;
+  if (!pendingDeviceVerification) {
+    return null;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await verifyLoginCode(otp);
+      await verifyDeviceOTP(otp);
       toast({
-        title: "Success",
-        description: "Email verified successfully! You're now logged in.",
+        title: "Device Verified",
+        description: "Your device has been trusted successfully!",
       });
     } catch (err) {
       toast({
-        title: "Error",
+        title: "Verification Failed",
         description: error || "Invalid verification code",
         variant: "destructive",
       });
     }
-  };
-
-  const handleResendCode = () => {
-    toast({
-      title: "Code Resent",
-      description: "A new verification code has been sent to your email",
-    });
   };
 
   return (
@@ -50,14 +37,13 @@ const OTPVerificationScreen: React.FC = () => {
       <Card className="w-full max-w-md rounded-2xl shadow-xl border-none">
         <CardHeader className="text-center space-y-2">
           <div className="w-16 h-16 rounded-xl bg-[#E74C3C] flex items-center justify-center mx-auto mb-2 shadow-md">
-            <span className="text-white text-3xl font-extrabold">📧</span>
+            <span className="text-white text-3xl font-extrabold">🔐</span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-            Check Your Email
+            Device Verification
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
-            We've sent a 6-digit verification code to<br/>
-            <span className="font-medium text-gray-800 dark:text-gray-200">{tempUserEmail}</span>
+            We've sent a 6-digit verification code to your email. Enter it below to trust this device.
           </CardDescription>
         </CardHeader>
         
@@ -80,12 +66,6 @@ const OTPVerificationScreen: React.FC = () => {
               </InputOTP>
             </div>
 
-            <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                Demo: Use <strong>123456</strong> as the verification code
-              </p>
-            </div>
-
             {error && (
               <div className="text-red-600 text-sm bg-red-100 dark:bg-red-900/30 p-3 rounded-md text-center">
                 {error}
@@ -97,21 +77,13 @@ const OTPVerificationScreen: React.FC = () => {
               className="w-full py-3 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
               disabled={isLoading || otp.length !== 6}
             >
-              {isLoading ? 'Verifying...' : 'Verify & Login'}
+              {isLoading ? 'Verifying...' : 'Verify Device'}
             </Button>
 
-            <div className="text-center space-y-2">
+            <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Didn't receive the code?
+                This will add your device to the trusted devices list for faster future logins.
               </p>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleResendCode}
-                className="text-[#E74C3C] hover:text-[#C0392B]"
-              >
-                Resend Code
-              </Button>
             </div>
           </form>
         </CardContent>
@@ -120,4 +92,4 @@ const OTPVerificationScreen: React.FC = () => {
   );
 };
 
-export default OTPVerificationScreen;
+export default DeviceVerificationScreen;

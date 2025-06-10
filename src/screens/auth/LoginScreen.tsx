@@ -15,8 +15,7 @@ import { useToast } from '../../components/ui/use-toast';
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, isAuthenticated, isLoading, error, pendingOTPVerification } = useAuth();
+  const { sendLoginCode, isAuthenticated, isLoading, error, pendingOTPVerification } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,32 +25,23 @@ const LoginScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      if (!error) {
-        toast({
-          title: 'Success',
-          description: 'Logged in successfully',
-        });
-        navigate('/');
-      }
+      await sendLoginCode(email);
+      toast({
+        title: 'Code Sent',
+        description: 'Please check your email for the verification code',
+      });
+      navigate('/verify-otp');
     } catch (err) {
       toast({
         title: 'Error',
-        description: error || 'Login failed',
+        description: error || 'Failed to send verification code',
         variant: 'destructive',
       });
     }
   };
 
-  const fillDemoCredentials = (role: string) => {
-    const credentials = {
-      admin: { email: 'admin@zonebudapp.com', password: 'password123' },
-      manager: { email: 'manager@zonebudapp.com', password: 'password123' },
-      worker: { email: 'worker@zonebudapp.com', password: 'password123' },
-    };
-    const cred = credentials[role as keyof typeof credentials];
-    setEmail(cred.email);
-    setPassword(cred.password);
+  const fillDemoEmail = () => {
+    setEmail('admin@zonebudapp.com');
   };
 
   return (
@@ -65,7 +55,7 @@ const LoginScreen: React.FC = () => {
             Welcome to ZoneBud 👋
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
-            Please enter your credentials to continue
+            Enter your email to receive a verification code
           </CardDescription>
         </CardHeader>
 
@@ -73,7 +63,7 @@ const LoginScreen: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="text-left space-y-1">
               <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
+                Email Address
               </label>
               <Input
                 id="email"
@@ -81,21 +71,6 @@ const LoginScreen: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="zonebud@example.com"
-                className="rounded-lg px-4 py-2"
-                required
-              />
-            </div>
-
-            <div className="text-left space-y-1">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
                 className="rounded-lg px-4 py-2"
                 required
               />
@@ -110,49 +85,30 @@ const LoginScreen: React.FC = () => {
             <Button 
               type="submit" 
               className="w-full py-2 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
-              disabled={isLoading}
+              disabled={isLoading || !email}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Sending Code...' : 'Send Verification Code'}
             </Button>
           </form>
 
           <div className="pt-2 border-t text-left space-y-3">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Try demo accounts (password: password123)
+              Try demo account
             </p>
-            <div className="grid gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fillDemoCredentials('admin')} 
-                className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
-              >
-                Super Admin Demo
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fillDemoCredentials('manager')} 
-                className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
-              >
-                Zone Manager Demo
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fillDemoCredentials('worker')} 
-                className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
-              >
-                Zone Worker Demo
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={fillDemoEmail} 
+              className="w-full border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
+            >
+              Use Demo Email
+            </Button>
+            <p className="text-xs text-gray-500 text-center">
+              Demo code: <strong>123456</strong>
+            </p>
           </div>
 
           <div className="text-center space-y-2 text-sm pt-2">
-            <Link to="/signup" className="text-[#E74C3C] font-medium hover:underline">
-              Don't have an account? Sign up
-            </Link>
-            <br />
             <Link to="/onboarding" className="text-gray-500 hover:underline">
               Take a tour
             </Link>

@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="app.lovable.f150a5f9fdc84913a9fb0accd897bbce">
@@ -22,6 +23,7 @@
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true"
+            android:screenOrientation="unspecified"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:windowSoftInputMode="adjustResize">
 
@@ -34,7 +36,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.zonebud.fileprovider"
+            android:authorities="app.lovable.f150a5f9fdc84913a9fb0accd897bbce.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

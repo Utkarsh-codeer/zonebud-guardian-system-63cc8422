@@ -1,13 +1,14 @@
+
 {
   "name": "ZoneBud Guardian System",
   "short_name": "ZoneBud",
   "description": "ZoneBud Guardian System - Secure and monitor your zones effortlessly.",
   "start_url": "/zonebud-guardian-system-63cc8422/",
   "scope": "/zonebud-guardian-system-63cc8422/",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#f86e6e",
+  "theme_color": "#E87070",
   "categories": ["utilities", "productivity", "security"],
   "icons": [
     {
