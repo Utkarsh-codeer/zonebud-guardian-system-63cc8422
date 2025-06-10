@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { generateDeviceFingerprint, getDeviceInfo } from '../utils/deviceFingerprint';
 
 export type UserRole = 'super_admin' | 'client_admin' | 'zone_manager' | 'zone_worker';
 
@@ -25,6 +26,7 @@ interface AuthState {
   error: string | null;
   pendingOTPVerification: boolean;
   pendingPINEntry: boolean;
+  pendingDeviceVerification: boolean;
   tempUserData: any;
 }
 
@@ -36,6 +38,7 @@ type AuthAction =
   | { type: 'UPDATE_USER'; payload: Partial<AuthUser> }
   | { type: 'OTP_PENDING'; payload: any }
   | { type: 'PIN_PENDING' }
+  | { type: 'DEVICE_VERIFICATION_PENDING'; payload: any }
   | { type: 'RESET_AUTH_STATE' };
 
 const initialState: AuthState = {
@@ -46,41 +49,8 @@ const initialState: AuthState = {
   error: null,
   pendingOTPVerification: false,
   pendingPINEntry: false,
+  pendingDeviceVerification: false,
   tempUserData: null,
-};
-
-// Demo users data
-const demoUsers = {
-  'admin@zonebudapp.com': {
-    id: 'demo-admin-123',
-    email: 'admin@zonebudapp.com',
-    name: 'Admin User',
-    phone: '+44 7700 900123',
-    role: 'super_admin' as UserRole,
-    zoneIds: ['demo-zone-1', 'demo-zone-2'],
-    isOnline: true,
-    lastSeen: new Date(),
-  },
-  'manager@zonebudapp.com': {
-    id: 'demo-manager-123',
-    email: 'manager@zonebudapp.com',
-    name: 'Zone Manager',
-    phone: '+44 7700 900124',
-    role: 'zone_manager' as UserRole,
-    zoneIds: ['demo-zone-1'],
-    isOnline: true,
-    lastSeen: new Date(),
-  },
-  'worker@zonebudapp.com': {
-    id: 'demo-worker-123',
-    email: 'worker@zonebudapp.com',
-    name: 'Zone Worker',
-    phone: '+44 7700 900125',
-    role: 'zone_worker' as UserRole,
-    zoneIds: ['demo-zone-1'],
-    isOnline: true,
-    lastSeen: new Date(),
-  },
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -97,6 +67,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         error: null,
         pendingOTPVerification: false,
         pendingPINEntry: false,
+        pendingDeviceVerification: false,
         tempUserData: null,
       };
     case 'AUTH_ERROR':
@@ -107,6 +78,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAuthenticated: false,
         isLoading: false,
         error: action.payload,
+        pendingDeviceVerification: false,
       };
     case 'LOGOUT':
       return {
@@ -132,11 +104,19 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         pendingPINEntry: true,
         isLoading: false,
       };
+    case 'DEVICE_VERIFICATION_PENDING':
+      return {
+        ...state,
+        pendingDeviceVerification: true,
+        tempUserData: action.payload,
+        isLoading: false,
+      };
     case 'RESET_AUTH_STATE':
       return {
         ...state,
         pendingOTPVerification: false,
         pendingPINEntry: false,
+        pendingDeviceVerification: false,
         tempUserData: null,
         error: null,
       };
@@ -146,13 +126,16 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 };
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  signup: (userData: any) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   verifyOTP: (otp: string) => Promise<void>;
   verifyPIN: (pin: string) => Promise<void>;
+  verifyDeviceOTP: (otp: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<AuthUser>) => void;
   resetAuthState: () => void;
+  // Legacy methods for backward compatibility
+  login: (email: string, password: string) => Promise<void>;
+  signup: (userData: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -168,78 +151,127 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const login = async (email: string, password: string) => {
+  const signInWithGoogle = async () => {
     dispatch({ type: 'AUTH_START' });
     
     try {
-      // Check if it's a demo user
-      if (email in demoUsers && password === 'password123') {
-        const demoUser = demoUsers[email as keyof typeof demoUsers];
-        const mockSession = {
-          access_token: 'demo-token',
-          refresh_token: 'demo-refresh',
-          expires_in: 3600,
-          expires_at: Date.now() + 3600000,
-          token_type: 'bearer',
-          user: {
-            id: demoUser.id,
-            email: demoUser.email,
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth-callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
           }
-        } as Session;
-        
-        dispatch({ type: 'AUTH_SUCCESS', payload: { user: demoUser, session: mockSession } });
-        return;
-      }
-
-      // Try Supabase auth for real users
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        }
       });
 
       if (error) throw error;
-
-      if (data.user && data.session) {
-        const profile = await fetchUserProfile(data.user.id);
-        const authUser = mapSupabaseUserToAuthUser(data.user, profile);
-        dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session: data.session } });
-      }
     } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Login failed' });
+      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Google sign-in failed' });
     }
   };
 
-  const signup = async (userData: any) => {
+  const checkDeviceAndProceed = async (user: User, session: Session) => {
+    const deviceInfo = getDeviceInfo();
+    
+    // Check if device is trusted
+    const { data: trustedDevice } = await supabase
+      .from('trusted_devices')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('device_fingerprint', deviceInfo.fingerprint)
+      .eq('is_active', true)
+      .single();
+
+    if (trustedDevice) {
+      // Update last used timestamp
+      await supabase
+        .from('trusted_devices')
+        .update({ 
+          last_used_at: new Date().toISOString(),
+          ip_address: await getUserIP()
+        })
+        .eq('id', trustedDevice.id);
+
+      // Device is trusted, proceed to PIN verification
+      dispatch({ type: 'PIN_PENDING' });
+    } else {
+      // New device, require verification
+      await sendDeviceVerificationCode(user);
+      dispatch({ type: 'DEVICE_VERIFICATION_PENDING', payload: { user, session, deviceInfo } });
+    }
+  };
+
+  const sendDeviceVerificationCode = async (user: User) => {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    await supabase
+      .from('otp_codes')
+      .insert({
+        user_id: user.id,
+        email: user.email!,
+        code,
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+      });
+
+    // In a real app, you'd send this via email
+    console.log('Device verification code:', code);
+  };
+
+  const getUserIP = async (): Promise<string> => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch {
+      return '0.0.0.0';
+    }
+  };
+
+  const verifyDeviceOTP = async (otp: string) => {
     dispatch({ type: 'AUTH_START' });
     
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            full_name: userData.name,
-            phone: userData.phone,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
+      if (!state.tempUserData) throw new Error('No pending verification');
 
-      if (error) throw error;
+      const { user, session, deviceInfo } = state.tempUserData;
 
-      if (data.user) {
-        // Create profile
-        await supabase.from('profiles').insert({
-          id: data.user.id,
-          full_name: userData.name,
-          phone: userData.phone,
-          role: 'zone_worker',
+      // Verify OTP
+      const { data: otpRecord } = await supabase
+        .from('otp_codes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('code', otp)
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString())
+        .single();
+
+      if (!otpRecord) {
+        throw new Error('Invalid or expired verification code');
+      }
+
+      // Mark OTP as used
+      await supabase
+        .from('otp_codes')
+        .update({ used: true })
+        .eq('id', otpRecord.id);
+
+      // Add device to trusted devices
+      await supabase
+        .from('trusted_devices')
+        .insert({
+          user_id: user.id,
+          device_fingerprint: deviceInfo.fingerprint,
+          ip_address: await getUserIP(),
+          user_agent: deviceInfo.userAgent,
+          device_name: deviceInfo.deviceName,
         });
 
-        dispatch({ type: 'OTP_PENDING', payload: userData });
-      }
+      // Proceed to PIN verification
+      dispatch({ type: 'PIN_PENDING' });
     } catch (error) {
-      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Signup failed' });
+      dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Device verification failed' });
     }
   };
 
@@ -249,7 +281,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyPIN = async (pin: string) => {
     if (pin === '1234') {
-      // Mock verification - in real app this would verify the PIN
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
         const profile = await fetchUserProfile(data.session.user.id);
@@ -259,6 +290,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       dispatch({ type: 'AUTH_ERROR', payload: 'Invalid PIN' });
     }
+  };
+
+  // Legacy methods for backward compatibility
+  const login = async (email: string, password: string) => {
+    // Redirect to Google auth instead
+    await signInWithGoogle();
+  };
+
+  const signup = async (userData: any) => {
+    // Redirect to Google auth instead
+    await signInWithGoogle();
   };
 
   const logout = async () => {
@@ -287,7 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {
       id: user.id,
       email: user.email || '',
-      name: profile?.full_name || user.user_metadata?.full_name || '',
+      name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || '',
       phone: profile?.phone || user.user_metadata?.phone || '',
       role: profile?.role || 'zone_worker',
       zoneIds: profile?.zone_ids || [],
@@ -297,26 +339,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          const authUser = mapSupabaseUserToAuthUser(session.user, profile);
-          dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session } });
-        } else {
+        if (event === 'SIGNED_IN' && session?.user) {
+          await checkDeviceAndProceed(session.user, session);
+        } else if (event === 'SIGNED_OUT') {
           dispatch({ type: 'LOGOUT' });
         }
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setTimeout(async () => {
-          const profile = await fetchUserProfile(session.user.id);
-          const authUser = mapSupabaseUserToAuthUser(session.user, profile);
-          dispatch({ type: 'AUTH_SUCCESS', payload: { user: authUser, session } });
+          await checkDeviceAndProceed(session.user, session);
         }, 0);
       } else {
         dispatch({ type: 'LOGOUT' });
@@ -330,13 +366,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         ...state,
-        login,
-        signup,
+        signInWithGoogle,
         verifyOTP,
         verifyPIN,
+        verifyDeviceOTP,
         logout,
         updateUser,
         resetAuthState,
+        login,
+        signup,
       }}
     >
       {children}

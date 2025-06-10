@@ -7,7 +7,8 @@ import { ZoneProvider } from './contexts/ZoneContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from './components/ui/toaster';
 import { SidebarProvider } from './components/ui/sidebar';
-import AuthScreen from './components/auth/AuthScreen';
+import NewAuthScreen from './components/auth/NewAuthScreen';
+import DeviceVerificationScreen from './components/auth/DeviceVerificationScreen';
 import OTPVerificationScreen from './screens/auth/OTPVerificationScreen';
 import PINEntryScreen from './screens/auth/PINEntryScreen';
 import Dashboard from './screens/dashboard/Dashboard';
@@ -29,7 +30,7 @@ import './App.css';
 const queryClient = new QueryClient();
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading, pendingOTPVerification, pendingPINEntry } = useAuth();
+  const { isAuthenticated, isLoading, pendingOTPVerification, pendingPINEntry, pendingDeviceVerification } = useAuth();
 
   if (isLoading) {
     return (
@@ -42,6 +43,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
         </div>
       </div>
     );
+  }
+
+  if (pendingDeviceVerification) {
+    return <Navigate to="/verify-device" replace />;
   }
 
   if (pendingOTPVerification) {
@@ -70,7 +75,8 @@ function App() {
                 <div className="App min-h-screen bg-background w-full">
                   <Routes>
                     {/* Auth Routes */}
-                    <Route path="/auth" element={<AuthScreen />} />
+                    <Route path="/auth" element={<NewAuthScreen />} />
+                    <Route path="/verify-device" element={<DeviceVerificationScreen />} />
                     <Route path="/verify-otp" element={<OTPVerificationScreen />} />
                     <Route path="/enter-pin" element={<PINEntryScreen />} />
                     
