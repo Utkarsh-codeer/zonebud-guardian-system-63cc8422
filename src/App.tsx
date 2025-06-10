@@ -7,10 +7,8 @@ import { ZoneProvider } from './contexts/ZoneContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from './components/ui/toaster';
 import { SidebarProvider } from './components/ui/sidebar';
-import NewAuthScreen from './components/auth/NewAuthScreen';
-import DeviceVerificationScreen from './components/auth/DeviceVerificationScreen';
+import LoginScreen from './screens/auth/LoginScreen';
 import OTPVerificationScreen from './screens/auth/OTPVerificationScreen';
-import PINEntryScreen from './screens/auth/PINEntryScreen';
 import Dashboard from './screens/dashboard/Dashboard';
 import ZoneMapScreen from './screens/zones/ZoneMapScreen';
 import ZoneListScreen from './screens/zones/ZoneListScreen';
@@ -30,14 +28,14 @@ import './App.css';
 const queryClient = new QueryClient();
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading, pendingOTPVerification, pendingPINEntry, pendingDeviceVerification } = useAuth();
+  const { isAuthenticated, isLoading, pendingOTPVerification } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F9EDED]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ECF3FF] to-[#E8F9F1]">
         <div className="text-center">
-          <div className="w-16 h-16 bg-[#E87070] rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">Z</span>
+          <div className="w-16 h-16 bg-[#E74C3C] rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-2xl">ZB</span>
           </div>
           <p className="text-gray-600">Loading...</p>
         </div>
@@ -45,20 +43,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  if (pendingDeviceVerification) {
-    return <Navigate to="/verify-device" replace />;
-  }
-
   if (pendingOTPVerification) {
     return <Navigate to="/verify-otp" replace />;
   }
 
-  if (pendingPINEntry) {
-    return <Navigate to="/enter-pin" replace />;
-  }
-
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -75,10 +65,8 @@ function App() {
                 <div className="App min-h-screen bg-background w-full">
                   <Routes>
                     {/* Auth Routes */}
-                    <Route path="/auth" element={<NewAuthScreen />} />
-                    <Route path="/verify-device" element={<DeviceVerificationScreen />} />
+                    <Route path="/login" element={<LoginScreen />} />
                     <Route path="/verify-otp" element={<OTPVerificationScreen />} />
-                    <Route path="/enter-pin" element={<PINEntryScreen />} />
                     
                     {/* Protected Routes */}
                     <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -97,8 +85,8 @@ function App() {
                     <Route path="/clients" element={<ProtectedRoute><ClientsScreen /></ProtectedRoute>} />
                     
                     {/* Redirects */}
-                    <Route path="/login" element={<Navigate to="/auth" replace />} />
-                    <Route path="/signup" element={<Navigate to="/auth" replace />} />
+                    <Route path="/auth" element={<Navigate to="/login" replace />} />
+                    <Route path="/signup" element={<Navigate to="/login" replace />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                   <Toaster />

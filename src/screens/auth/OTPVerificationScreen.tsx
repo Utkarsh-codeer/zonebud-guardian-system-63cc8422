@@ -2,14 +2,14 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input-otp';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/use-toast';
 
 const OTPVerificationScreen: React.FC = () => {
   const [otp, setOtp] = useState('');
-  const { verifyOTP, isAuthenticated, isLoading, error, pendingOTPVerification, pendingPINEntry } = useAuth();
+  const { verifyLoginCode, isAuthenticated, isLoading, error, pendingOTPVerification, tempUserEmail } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -17,30 +17,32 @@ const OTPVerificationScreen: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
-  if (!pendingOTPVerification && !pendingPINEntry) {
+  if (!pendingOTPVerification) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (pendingPINEntry) {
-    return <Navigate to="/enter-pin" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await verifyOTP(otp);
+      await verifyLoginCode(otp);
       toast({
         title: "Success",
-        description: "Phone number verified successfully!",
+        description: "Email verified successfully! You're now logged in.",
       });
-      navigate('/enter-pin');
     } catch (err) {
       toast({
         title: "Error",
-        description: error || "OTP verification failed",
+        description: error || "Invalid verification code",
         variant: "destructive",
       });
     }
+  };
+
+  const handleResendCode = () => {
+    toast({
+      title: "Code Resent",
+      description: "A new verification code has been sent to your email",
+    });
   };
 
   return (
@@ -48,35 +50,44 @@ const OTPVerificationScreen: React.FC = () => {
       <Card className="w-full max-w-md rounded-2xl shadow-xl border-none">
         <CardHeader className="text-center space-y-2">
           <div className="w-16 h-16 rounded-xl bg-[#E74C3C] flex items-center justify-center mx-auto mb-2 shadow-md">
-            <span className="text-white text-3xl font-extrabold">📱</span>
+            <span className="text-white text-3xl font-extrabold">📧</span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-            Verify Your Phone
+            Check Your Email
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
-            We've sent a 6-digit code to your phone number. Enter it below to continue.
+            We've sent a 6-digit verification code to<br/>
+            <span className="font-medium text-gray-800 dark:text-gray-200">{tempUserEmail}</span>
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="text-center space-y-2">
-              <Input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="Enter 6-digit code"
+            <div className="flex justify-center">
+              <InputOTP
                 maxLength={6}
-                className="text-center text-2xl tracking-widest rounded-lg px-4 py-3"
-                required
-              />
-              <p className="text-xs text-gray-500">
+                value={otp}
+                onChange={setOtp}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                 Demo: Use <strong>123456</strong> as the verification code
               </p>
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm bg-red-100 dark:bg-red-900/30 p-3 rounded-md">
+              <div className="text-red-600 text-sm bg-red-100 dark:bg-red-900/30 p-3 rounded-md text-center">
                 {error}
               </div>
             )}
@@ -86,11 +97,19 @@ const OTPVerificationScreen: React.FC = () => {
               className="w-full py-3 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
               disabled={isLoading || otp.length !== 6}
             >
-              {isLoading ? 'Verifying...' : 'Verify Code'}
+              {isLoading ? 'Verifying...' : 'Verify & Login'}
             </Button>
 
-            <div className="text-center">
-              <Button variant="ghost" size="sm" className="text-[#E74C3C] hover:text-[#C0392B]">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Didn't receive the code?
+              </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleResendCode}
+                className="text-[#E74C3C] hover:text-[#C0392B]"
+              >
                 Resend Code
               </Button>
             </div>
