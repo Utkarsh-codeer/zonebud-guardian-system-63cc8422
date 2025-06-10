@@ -13,7 +13,7 @@ export const generateDeviceFingerprint = (): string => {
     new Date().getTimezoneOffset(),
     canvas.toDataURL(),
     navigator.hardwareConcurrency || 'unknown',
-    navigator.deviceMemory || 'unknown'
+    (navigator as any).deviceMemory || 'unknown'
   ].join('|');
   
   return btoa(fingerprint).substring(0, 32);
