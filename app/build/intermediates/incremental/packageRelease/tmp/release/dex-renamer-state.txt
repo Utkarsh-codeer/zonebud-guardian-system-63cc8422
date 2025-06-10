@@ -1,0 +1,4 @@
+#Mon Jun 09 21:11:21 IST 2025
+base.0=/Users/anika/Documents/GitHub/zonebud-guardian-system-63cc8422/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

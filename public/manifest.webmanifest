@@ -4,7 +4,7 @@
   "description": "ZoneBud Guardian System - Secure and monitor your zones effortlessly.",
   "start_url": "/zonebud-guardian-system-63cc8422/",
   "scope": "/zonebud-guardian-system-63cc8422/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#f86e6e",

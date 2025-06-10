@@ -1,0 +1,49 @@
+{
+  "packageId": "io.github.utkarsh_codeer.twa",
+  "host": "utkarsh-codeer.github.io",
+  "name": "Zonebud Guardian System",
+  "launcherName": "Zonebud",
+  "display": "fullscreen",
+  "themeColor": "#F86E6E",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": true,
+  "startUrl": "/zonebud-guardian-system-63cc8422/",
+  "iconUrl": "https://utkarsh-codeer.github.io/zonebud-guardian-system-63cc8422/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/Users/anika/Documents/GitHub/zonebud-guardian-system-63cc8422/android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://utkarsh-codeer.github.io/zonebud-guardian-system-63cc8422/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://utkarsh-codeer.github.io/zonebud-guardian-system-63cc8422/",
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "appVersion": "1"
+}

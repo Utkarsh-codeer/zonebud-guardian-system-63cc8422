@@ -1,7 +1,6 @@
-
 {
-  "appId": "app.lovable.f150a5f9fdc84913a9fb0accd897bbce",
-  "appName": "zonebud-guardian-system",
+  "appId": "com.zonebud.guardian",
+  "appName": "zonebud-app",
   "webDir": "dist",
   "server": {
     "url": "https://f150a5f9-fdc8-4913-a9fb-0accd897bbce.lovableproject.com?forceHideBadge=true",
