@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -102,7 +103,6 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   
-
   const getUserIP = async (): Promise<string> => {
     try {
       const res = await fetch('https://api.ipify.org?format=json');
@@ -119,6 +119,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const deviceInfo = getDeviceInfo();
       const userIP = await getUserIP();
 
+      console.log('Checking for trusted device with fingerprint:', deviceInfo.fingerprint);
+      console.log('User IP:', userIP);
+      console.log('Email:', email);
+
       const { data: trustedDevice } = await supabase
         .from('trusted_devices')
         .select('*, profiles!user_id(*)')
@@ -127,7 +131,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('is_active', true)
         .single();
 
+      console.log('Trusted device found:', trustedDevice);
+
       if (trustedDevice?.profiles?.email === email) {
+        console.log('Device is trusted, logging in automatically');
         const mockUser: AuthUser = {
           id: trustedDevice.user_id,
           email,
@@ -160,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      console.log('Device not trusted, sending OTP code');
       const code = Math.floor(100000 + Math.random() * 900000).toString();
 
       await supabase.from('otp_codes').insert({
@@ -170,9 +178,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       console.log(`Login code for ${email}: ${code}`);
-
       dispatch({ type: 'OTP_PENDING', payload: { email } });
     } catch (error) {
+      console.error('Error in sendLoginCode:', error);
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Failed to send login code' });
     }
   };
@@ -182,12 +190,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!state.tempUserEmail) throw new Error('No pending verification');
 
+      console.log('Verifying code:', code);
+      console.log('For email:', state.tempUserEmail);
+
+      // Check for demo code first
       if (code === '123456') {
+        console.log('Demo code used, proceeding with login');
         await handleSuccessfulLogin(state.tempUserEmail);
         return;
       }
 
-      const { data: otp } = await supabase
+      // Check database for real OTP
+      const { data: otp, error: otpError } = await supabase
         .from('otp_codes')
         .select('*')
         .eq('email', state.tempUserEmail)
@@ -195,6 +209,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('used', false)
         .gt('expires_at', new Date().toISOString())
         .single();
+
+      console.log('OTP lookup result:', otp, otpError);
 
       if (!otp) throw new Error('Invalid or expired code');
 
@@ -205,15 +221,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await handleSuccessfulLogin(state.tempUserEmail);
     } catch (error) {
+      console.error('Error in verifyLoginCode:', error);
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Verification failed' });
     }
   };
 
   const handleSuccessfulLogin = async (email: string) => {
     try {
+      console.log('Handling successful login for:', email);
+      
       let { data: profile } = await supabase.from('profiles').select('*').eq('email', email).single();
 
       if (!profile) {
+        console.log('Creating new profile for:', email);
         const newId = crypto.randomUUID();
         const { data: newProfile } = await supabase
           .from('profiles')
@@ -228,6 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const deviceInfo = getDeviceInfo();
       const userIP = await getUserIP();
 
+      console.log('Adding trusted device');
       await supabase.from('trusted_devices').upsert({
         user_id: profile.id,
         device_fingerprint: deviceInfo.fingerprint,
@@ -263,8 +284,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       };
 
+      console.log('Login successful for user:', user);
       dispatch({ type: 'AUTH_SUCCESS', payload: { user, session: mockSession } });
     } catch (error) {
+      console.error('Error in handleSuccessfulLogin:', error);
       dispatch({ type: 'AUTH_ERROR', payload: error instanceof Error ? error.message : 'Login failed' });
     }
   };

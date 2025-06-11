@@ -45,22 +45,22 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ECF3FF] to-[#E8F9F1] dark:from-[#1f1f1f] dark:to-[#121212] px-4">
-      <Card className="w-full max-w-md rounded-2xl shadow-xl border-none">
-        <CardHeader className="text-center space-y-2">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#ECF3FF] to-[#E8F9F1] dark:from-[#1f1f1f] dark:to-[#121212] p-4">
+      <Card className="w-full max-w-sm mx-auto rounded-2xl shadow-xl border-none">
+        <CardHeader className="text-center space-y-2 pb-4">
           <div className="w-16 h-16 rounded-xl bg-[#E74C3C] flex items-center justify-center mx-auto mb-2 shadow-md">
             <span className="text-white text-3xl font-extrabold">ZB</span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+          <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
             Welcome to ZoneBud 👋
           </CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-300">
+          <CardDescription className="text-sm text-gray-600 dark:text-gray-300">
             Enter your email to receive a verification code
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6 pt-4 pb-2">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <CardContent className="space-y-4 p-6 pt-0">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="text-left space-y-1">
               <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email Address
@@ -71,20 +71,20 @@ const LoginScreen: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="zonebud@example.com"
-                className="rounded-lg px-4 py-2"
+                className="rounded-lg px-4 py-3 w-full text-base"
                 required
               />
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded-md">
+              <div className="text-red-600 text-sm bg-red-100 dark:bg-red-900/30 p-3 rounded-md">
                 {error}
               </div>
             )}
 
             <Button 
               type="submit" 
-              className="w-full py-2 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
+              className="w-full py-3 text-base rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
               disabled={isLoading || !email}
             >
               {isLoading ? 'Sending Code...' : 'Send Verification Code'}
@@ -99,7 +99,7 @@ const LoginScreen: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={fillDemoEmail} 
-              className="w-full border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
+              className="w-full py-2 border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white"
             >
               Use Demo Email
             </Button>

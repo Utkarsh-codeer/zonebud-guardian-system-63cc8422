@@ -9,7 +9,7 @@ import { useToast } from '../../components/ui/use-toast';
 
 const OTPVerificationScreen: React.FC = () => {
   const [otp, setOtp] = useState('');
-  const { verifyLoginCode, isAuthenticated, isLoading, error, pendingOTPVerification, tempUserEmail } = useAuth();
+  const { verifyLoginCode, isAuthenticated, isLoading, error, pendingOTPVerification, tempUserEmail, sendLoginCode } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -23,6 +23,8 @@ const OTPVerificationScreen: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (otp.length !== 6) return;
+    
     try {
       await verifyLoginCode(otp);
       toast({
@@ -38,44 +40,56 @@ const OTPVerificationScreen: React.FC = () => {
     }
   };
 
-  const handleResendCode = () => {
-    toast({
-      title: "Code Resent",
-      description: "A new verification code has been sent to your email",
-    });
+  const handleResendCode = async () => {
+    if (tempUserEmail) {
+      try {
+        await sendLoginCode(tempUserEmail);
+        toast({
+          title: "Code Resent",
+          description: "A new verification code has been sent to your email",
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to resend code",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ECF3FF] to-[#E8F9F1] dark:from-[#1f1f1f] dark:to-[#121212] px-4">
-      <Card className="w-full max-w-md rounded-2xl shadow-xl border-none">
-        <CardHeader className="text-center space-y-2">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#ECF3FF] to-[#E8F9F1] dark:from-[#1f1f1f] dark:to-[#121212] p-4">
+      <Card className="w-full max-w-sm mx-auto rounded-2xl shadow-xl border-none">
+        <CardHeader className="text-center space-y-2 pb-4">
           <div className="w-16 h-16 rounded-xl bg-[#E74C3C] flex items-center justify-center mx-auto mb-2 shadow-md">
             <span className="text-white text-3xl font-extrabold">📧</span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+          <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
             Check Your Email
           </CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-300">
+          <CardDescription className="text-sm text-gray-600 dark:text-gray-300 px-2">
             We've sent a 6-digit verification code to<br/>
-            <span className="font-medium text-gray-800 dark:text-gray-200">{tempUserEmail}</span>
+            <span className="font-medium text-gray-800 dark:text-gray-200 break-all">{tempUserEmail}</span>
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <CardContent className="space-y-5 p-6 pt-0">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex justify-center">
               <InputOTP
                 maxLength={6}
                 value={otp}
                 onChange={setOtp}
+                className="w-full"
               >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
+                <InputOTPGroup className="gap-2">
+                  <InputOTPSlot index={0} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={1} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={2} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={3} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={4} className="w-12 h-12 text-lg" />
+                  <InputOTPSlot index={5} className="w-12 h-12 text-lg" />
                 </InputOTPGroup>
               </InputOTP>
             </div>
@@ -94,7 +108,7 @@ const OTPVerificationScreen: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full py-3 text-sm rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
+              className="w-full py-3 text-base rounded-lg font-medium bg-[#E74C3C] hover:bg-[#C0392B]"
               disabled={isLoading || otp.length !== 6}
             >
               {isLoading ? 'Verifying...' : 'Verify & Login'}
@@ -108,7 +122,8 @@ const OTPVerificationScreen: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={handleResendCode}
-                className="text-[#E74C3C] hover:text-[#C0392B]"
+                className="text-[#E74C3C] hover:text-[#C0392B] py-2"
+                disabled={isLoading}
               >
                 Resend Code
               </Button>

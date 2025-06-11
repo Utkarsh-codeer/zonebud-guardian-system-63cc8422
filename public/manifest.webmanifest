@@ -2,58 +2,45 @@
 {
   "name": "ZoneBud Guardian System",
   "short_name": "ZoneBud",
-  "description": "ZoneBud Guardian System - Secure and monitor your zones effortlessly.",
-  "start_url": "/zonebud-guardian-system-63cc8422/",
-  "scope": "/zonebud-guardian-system-63cc8422/",
+  "description": "Professional zone management and safety monitoring system",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#ffffff",
+  "background_color": "#E87070",
   "theme_color": "#E87070",
-  "categories": ["utilities", "productivity", "security"],
+  "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
-      "src": "/zonebud-guardian-system-63cc8422/icon-192.png",
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "72x72",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "96x96",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "144x144",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.ico",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/x-icon"
     },
     {
-      "src": "/zonebud-guardian-system-63cc8422/icon-512.png",
+      "src": "/favicon.ico",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/x-icon"
     }
   ],
-  "lang": "en-US",
-  "dir": "ltr",
-  "prefer_related_applications": false,
-  "related_applications": [],
-  "screenshots": [
-    {
-      "src": "/zonebud-guardian-system-63cc8422/screenshots/screen1.png",
-      "sizes": "640x480",
-      "type": "image/png"
-    },
-    {
-      "src": "/zonebud-guardian-system-63cc8422/screenshots/screen2.png",
-      "sizes": "640x480",
-      "type": "image/png"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Open Dashboard",
-      "short_name": "Dashboard",
-      "description": "Quick access to your main dashboard",
-      "url": "/zonebud-guardian-system-63cc8422/dashboard",
-      "icons": [{ "src": "/zonebud-guardian-system-63cc8422/icons/dashboard-icon.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Zone Settings",
-      "short_name": "Settings",
-      "description": "Manage your zones",
-      "url": "/zonebud-guardian-system-63cc8422/settings",
-      "icons": [{ "src": "/zonebud-guardian-system-63cc8422/icons/settings-icon.png", "sizes": "192x192" }]
-    }
-  ]
+  "categories": ["productivity", "business", "utilities"],
+  "screenshots": []
 }
