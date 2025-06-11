@@ -103,41 +103,28 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   
-  const getUserIP = async (): Promise<string> => {
-    try {
-      const res = await fetch('https://api.ipify.org?format=json');
-      const data = await res.json();
-      return data.ip;
-    } catch {
-      return '127.0.0.1';
-    }
-  };
-
   const sendLoginCode = async (email: string) => {
     dispatch({ type: 'AUTH_START' });
     try {
+      console.log('Sending login code for:', email);
+
+      // Check if user already has a trusted device (simplified without IP)
       const deviceInfo = getDeviceInfo();
-      const userIP = await getUserIP();
+      console.log('Device fingerprint:', deviceInfo.fingerprint);
 
-      console.log('Checking for trusted device with fingerprint:', deviceInfo.fingerprint);
-      console.log('User IP:', userIP);
-      console.log('Email:', email);
-
-      // Check for trusted device
       const { data: trustedDevice, error: trustedDeviceError } = await supabase
         .from('trusted_devices')
         .select(`
           *,
-          profiles!inner(*)
+          profiles!inner(email)
         `)
         .eq('device_fingerprint', deviceInfo.fingerprint)
-        .eq('ip_address', userIP)
         .eq('is_active', true)
         .single();
 
       console.log('Trusted device query result:', trustedDevice, trustedDeviceError);
 
-      if (trustedDevice && trustedDevice.profiles && trustedDevice.profiles.email === email) {
+      if (trustedDevice && trustedDevice.profiles?.email === email) {
         console.log('Device is trusted, logging in automatically');
         await handleSuccessfulLogin(email);
         return;
@@ -237,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (createError) {
           console.error('Error creating profile:', createError);
-          throw new Error('Could not create profile');
+          throw new Error('Could not create profile: ' + createError.message);
         }
         
         profile = newProfile;
@@ -246,14 +233,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!profile) throw new Error('Could not fetch or create profile');
 
+      // Add trusted device (simplified without IP)
       const deviceInfo = getDeviceInfo();
-      const userIP = await getUserIP();
-
       console.log('Adding trusted device');
+      
       const { error: deviceError } = await supabase.from('trusted_devices').upsert({
         user_id: profile.id,
         device_fingerprint: deviceInfo.fingerprint,
-        ip_address: userIP,
+        ip_address: '127.0.0.1', // Placeholder IP
         user_agent: deviceInfo.userAgent,
         device_name: deviceInfo.deviceName,
         is_active: true,
@@ -268,7 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const user: AuthUser = {
         id: profile.id,
-        email: email,
+        email: profile.email || email,
         name: profile.full_name || 'User',
         phone: profile.phone || '',
         role: (profile.role as UserRole) || 'zone_worker',
@@ -284,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token_type: 'bearer',
         user: {
           id: profile.id,
-          email: email,
+          email: profile.email || email,
           created_at: new Date().toISOString(),
           app_metadata: {},
           user_metadata: {},

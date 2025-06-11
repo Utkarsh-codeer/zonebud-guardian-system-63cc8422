@@ -102,6 +102,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
+          email: string | null
           fcm_token: string | null
           full_name: string | null
           id: string
@@ -112,6 +113,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           fcm_token?: string | null
           full_name?: string | null
           id: string
@@ -122,6 +124,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           fcm_token?: string | null
           full_name?: string | null
           id?: string
@@ -166,7 +169,15 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trusted_devices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_2fa_settings: {
         Row: {
