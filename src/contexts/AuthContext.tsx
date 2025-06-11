@@ -123,59 +123,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('User IP:', userIP);
       console.log('Email:', email);
 
-      const { data: trustedDevice } = await supabase
+      // Check for trusted device
+      const { data: trustedDevice, error: trustedDeviceError } = await supabase
         .from('trusted_devices')
-        .select('*, profiles!user_id(*)')
+        .select(`
+          *,
+          profiles!inner(*)
+        `)
         .eq('device_fingerprint', deviceInfo.fingerprint)
         .eq('ip_address', userIP)
         .eq('is_active', true)
         .single();
 
-      console.log('Trusted device found:', trustedDevice);
+      console.log('Trusted device query result:', trustedDevice, trustedDeviceError);
 
-      if (trustedDevice?.profiles?.email === email) {
+      if (trustedDevice && trustedDevice.profiles && trustedDevice.profiles.email === email) {
         console.log('Device is trusted, logging in automatically');
-        const mockUser: AuthUser = {
-          id: trustedDevice.user_id,
-          email,
-          name: trustedDevice.profiles.full_name || 'User',
-          phone: trustedDevice.profiles.phone || '',
-          role: trustedDevice.profiles.role || 'zone_worker',
-          zoneIds: trustedDevice.profiles.zone_ids || [],
-          isOnline: true,
-          lastSeen: new Date(),
-        };
-
-        const mockSession: Session = {
-          access_token: 'trusted_token',
-          refresh_token: 'trusted_refresh',
-          expires_in: 3600,
-          token_type: 'bearer',
-          user: {
-            id: trustedDevice.user_id,
-            email,
-            created_at: new Date().toISOString(),
-          }
-        };
-
-        await supabase
-          .from('trusted_devices')
-          .update({ last_used_at: new Date().toISOString() })
-          .eq('id', trustedDevice.id);
-
-        dispatch({ type: 'AUTH_SUCCESS', payload: { user: mockUser, session: mockSession } });
+        await handleSuccessfulLogin(email);
         return;
       }
 
       console.log('Device not trusted, sending OTP code');
       const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-      await supabase.from('otp_codes').insert({
+      const { error: insertError } = await supabase.from('otp_codes').insert({
         user_id: 'temp',
         email,
         code,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       });
+
+      if (insertError) {
+        console.error('Error inserting OTP:', insertError);
+      }
 
       console.log(`Login code for ${email}: ${code}`);
       dispatch({ type: 'OTP_PENDING', payload: { email } });
@@ -214,6 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!otp) throw new Error('Invalid or expired code');
 
+      // Mark OTP as used
       await supabase
         .from('otp_codes')
         .update({ used: true })
@@ -230,17 +211,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Handling successful login for:', email);
       
-      let { data: profile } = await supabase.from('profiles').select('*').eq('email', email).single();
+      // First check if profile exists
+      let { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .single();
 
+      console.log('Profile lookup result:', profile, profileError);
+
+      // If no profile exists, create one
       if (!profile) {
         console.log('Creating new profile for:', email);
         const newId = crypto.randomUUID();
-        const { data: newProfile } = await supabase
+        const { data: newProfile, error: createError } = await supabase
           .from('profiles')
-          .insert({ id: newId, email, full_name: email.split('@')[0], role: 'zone_worker' })
+          .insert({ 
+            id: newId, 
+            email, 
+            full_name: email.split('@')[0], 
+            role: 'zone_worker' 
+          })
           .select()
           .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          throw new Error('Could not create profile');
+        }
+        
         profile = newProfile;
+        console.log('Created new profile:', profile);
       }
 
       if (!profile) throw new Error('Could not fetch or create profile');
@@ -249,7 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userIP = await getUserIP();
 
       console.log('Adding trusted device');
-      await supabase.from('trusted_devices').upsert({
+      const { error: deviceError } = await supabase.from('trusted_devices').upsert({
         user_id: profile.id,
         device_fingerprint: deviceInfo.fingerprint,
         ip_address: userIP,
@@ -261,12 +262,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         onConflict: 'user_id,device_fingerprint'
       });
 
+      if (deviceError) {
+        console.error('Error adding trusted device:', deviceError);
+      }
+
       const user: AuthUser = {
         id: profile.id,
-        email: profile.email,
+        email: email,
         name: profile.full_name || 'User',
         phone: profile.phone || '',
-        role: profile.role || 'zone_worker',
+        role: (profile.role as UserRole) || 'zone_worker',
         zoneIds: profile.zone_ids || [],
         isOnline: true,
         lastSeen: new Date(),
@@ -279,8 +284,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token_type: 'bearer',
         user: {
           id: profile.id,
-          email: profile.email,
+          email: email,
           created_at: new Date().toISOString(),
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          confirmation_sent_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          role: 'authenticated',
+          updated_at: new Date().toISOString(),
         },
       };
 
