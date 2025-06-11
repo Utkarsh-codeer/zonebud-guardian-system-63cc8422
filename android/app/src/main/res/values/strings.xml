@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">zonebud-guardian-system</string>
-    <string name="title_activity_main">zonebud-guardian-system</string>
-    <string name="package_name">app.lovable.f150a5f9fdc84913a9fb0accd897bbce</string>
-    <string name="custom_url_scheme">app.lovable.f150a5f9fdc84913a9fb0accd897bbce</string>
+    <string name="app_name">zonebud-app</string>
+    <string name="title_activity_main">zonebud-app</string>
+    <string name="package_name">com.zonebud.guardian</string>
+    <string name="custom_url_scheme">com.zonebud.guardian</string>
 </resources>

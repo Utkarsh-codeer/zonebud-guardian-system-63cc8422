@@ -1,11 +1,10 @@
-
 apply plugin: 'com.android.application'
 
 android {
-    namespace "app.lovable.f150a5f9fdc84913a9fb0accd897bbce"
+    namespace "com.zonebud.guardian"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.lovable.f150a5f9fdc84913a9fb0accd897bbce"
+        applicationId "com.zonebud.guardian"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -22,11 +21,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
     }
 }
 

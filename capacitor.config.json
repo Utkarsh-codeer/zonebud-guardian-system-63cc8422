@@ -3,7 +3,7 @@
   "appName": "zonebud-app",
   "webDir": "dist",
   "server": {
-    "url": "https://f150a5f9-fdc8-4913-a9fb-0accd897bbce.lovableproject.com?forceHideBadge=true",
+    "url": "https://utkarsh-codeer.github.io/zonebud-guardian-system-63cc8422",
     "cleartext": true
   },
   "plugins": {
